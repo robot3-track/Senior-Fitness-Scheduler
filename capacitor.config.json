@@ -1,0 +1,9 @@
+{
+  "appId": "com.seniorfitness.app",
+  "appName": "Senior Fitness & Activity Tracker",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Senior Fitness Scheduler",
+  "description": "An easy-to-use fitness, schedule, and activity tracker tailored for older adults, following CDC physical activity guidelines with accessible timers, clear guides, and progressive logging.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
