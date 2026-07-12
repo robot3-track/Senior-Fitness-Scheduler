@@ -23,7 +23,7 @@ import {
   UserCheck
 } from 'lucide-react';
 
-// Define structures for our application
+// Define structures for this app!
 interface Exercise {
   id: string;
   name: string;
@@ -52,7 +52,7 @@ interface CompletedLog {
   timestamp: string;
 }
 
-// 1. Static exercise database aligned with official CDC older adults physical activity guidelines
+// 1. Static exercise database aligned with official CDC older adults physical activity guidelines; very important for sure!
 const EXERCISES_DB: Exercise[] = [
   {
     id: 'brisk-walk',
@@ -171,7 +171,7 @@ const EXERCISES_DB: Exercise[] = [
       'Raise both shoulders up toward your ears, then roll them backward and down in soft circles.',
       'Repeat the shoulder rolls forward 10 times and backward 10 times.'
     ],
-    safetyTip: 'Never roll your neck in full complete circles. Only stretch to a comfortable tightness—never pain.'
+    safetyTip: 'Never roll your neck in full complete circles. Only stretch to a comfortable tightness—never pain!'
   }
 ];
 
@@ -1341,7 +1341,7 @@ const playChime = () => {
                   </ol>
                 </div>
 
-                {/* Highly Visible Safety Warning Banner */}
+                {/* Highly Visible Safety Warning Banner For Elderly Support! */}
                 <div className="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl flex gap-3 items-start">
                   <Info className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
@@ -1376,7 +1376,7 @@ const playChime = () => {
                   </p>
                 </div>
 
-                {/* Quick adjustments */}
+                {/* Small adjustments, or quick however you name it lol */}
                 <div className="space-y-4">
                   <p className={`${textScale.small} text-center font-bold text-white/90 uppercase tracking-widest`}>
                     Adjust Time / Presets
@@ -1417,7 +1417,7 @@ const playChime = () => {
                   </div>
                 </div>
 
-                {/* Start, Pause, and Reset Buttons */}
+                {/* My Simple Start, Pause, and Reset Buttons */}
                 <div className="grid grid-cols-2 gap-4 mt-8">
                   <button
                     onClick={() => setIsTimerRunning(!isTimerRunning)}
@@ -1452,7 +1452,7 @@ const playChime = () => {
                   </button>
                 </div>
 
-                {/* Animated overlay congratulating complete and logging */}
+                {/* Animated overlay congratulating complete and logging- to increase participation!*/}
                 <AnimatePresence>
                   {showCompletionPrompt && (
                     <motion.div
@@ -1505,7 +1505,7 @@ const playChime = () => {
             </div>
           )}
 
-          {/* TAB 3: WEEKLY METRICS PROGRESS & LOG HISTORY */}
+          {/* TAB 3: WEEKLY METRICS PROGRESS & LOG HISTORY - to preserve the record */}
           {activeTab === 'progress' && (
             <div className="space-y-6" id="progress-tab-view">
               
@@ -1677,16 +1677,16 @@ const playChime = () => {
 
       </div>
 
-      {/* PROFESSIONAL FOOTER */}
+      {/* PROFESSIONAL LOOKING FOOTER */}
       <footer className="text-center py-8 text-[#7A7667] border-t-2 border-[#E6E2D3]/60 max-w-7xl w-full mx-auto mt-12 bg-white rounded-t-3xl p-4 border-l-2 border-r-2 border-[#D3CEBE]">
         <p className={`${textScale.bodySmall} font-serif font-semibold text-[#1E3A8A]`}>
           Senior Fitness Scheduler & Tracker
         </p>
         <p className={`${textScale.small} font-medium text-[#7A7667] mt-1`}>
-          Healthy Aging Guidelines Portal
+          Healthy Aging Guidelines
         </p>
         <p className="text-[10px] text-[#7A7667]/75 tracking-wider mt-0.5">
-          Designed specifically for older adults with highly visible layouts and clear text controls.
+          Designed by a student specifically for older adults with highly visible layouts and clear text controls
         </p>
       </footer>
 
@@ -1741,10 +1741,10 @@ const playChime = () => {
                   </div>
                 </div>
 
-                {/* Duration Inputs */}
+                {/* Duration Inputs, desirable, targets! */}
                 <div className="space-y-2">
                   <label className={`${textScale.small} block font-bold uppercase tracking-wider text-[#1E3A8A]`}>
-                    Target Duration (Minutes):
+                    Desirable Duration (Minutes):
                   </label>
                   <div className="flex items-center gap-3">
                     <button
@@ -1781,7 +1781,7 @@ const playChime = () => {
                   className="w-full py-4 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold text-lg rounded-2xl transition-all cursor-pointer shadow-md"
                   style={{ minHeight: '56px' }}
                 >
-                  💾 Save to Day&apos;s Schedule
+                  Save to Day&apos;s Schedule!
                 </button>
               </form>
             </motion.div>
