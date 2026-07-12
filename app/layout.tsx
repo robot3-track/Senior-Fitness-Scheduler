@@ -16,10 +16,10 @@ const lora = Lora({
 
 export const metadata: Metadata = {
   title: 'Senior Fitness & Activity Tracker',
-  description: 'A beautiful, accessible, easy-to-use physical activity scheduler and tracker following CDC guidelines for older adults.',
+  description: 'An accessible, easy-to-use physical activity scheduler and tracker following CDC guidelines for older adults.',
   manifest: '/manifest.json',
   icons: {
-    icon: 'https://picsum.photos/seed/fitness/192/192',
+    icon: 'https://www.un.org/sites/un2.un.org/files/2020/06/sdg3-en.png',
   },
 };
 
