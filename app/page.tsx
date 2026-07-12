@@ -855,7 +855,7 @@ const playChime = () => {
             }`}
           >
             <Heart className="w-4 h-4 shrink-0" />
-            <span>🏡 Welcome Hub</span>
+            <span>Welcome Hub</span>
           </button>
 
           <button
@@ -867,7 +867,7 @@ const playChime = () => {
             }`}
           >
             <CalendarIcon className="w-4 h-4 shrink-0" />
-            <span>📅 Checklist</span>
+            <span>Checklist</span>
           </button>
           
           <button
@@ -879,7 +879,7 @@ const playChime = () => {
             }`}
           >
             <TimerIcon className="w-4 h-4 shrink-0" />
-            <span>⏱️ Active Timer</span>
+            <span>Active Timer</span>
           </button>
           
           <button
@@ -891,7 +891,7 @@ const playChime = () => {
             }`}
           >
             <Award className="w-4 h-4 shrink-0" />
-            <span>📊 CDC Progress</span>
+            <span>CDC Progress</span>
           </button>
         </div>
 
