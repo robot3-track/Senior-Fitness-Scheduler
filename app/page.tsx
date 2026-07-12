@@ -175,12 +175,37 @@ const EXERCISES_DB: Exercise[] = [
   }
 ];
 
+// Student Touch: High contrast themes mapping for distinct CDC categorizations
+const CATEGORY_THEMES = {
+  aerobic: {
+    bg: 'bg-blue-50 border-blue-400 text-blue-950',
+    badge: 'bg-blue-700 text-white',
+    icon: '🔵'
+  },
+  strength: {
+    bg: 'bg-orange-50 border-orange-400 text-orange-950',
+    badge: 'bg-orange-700 text-white',
+    icon: '🟠'
+  },
+  balance: {
+    bg: 'bg-emerald-50 border-emerald-400 text-emerald-950',
+    badge: 'bg-emerald-700 text-white',
+    icon: '🟢'
+  },
+  stretch: {
+    bg: 'bg-purple-50 border-purple-400 text-purple-950',
+    badge: 'bg-purple-700 text-white',
+    icon: '🟣'
+  }
+};
+
+const accessibleFocus = "focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:border-[#1E3A8A]";
+
 // Helper to generate the current week's dates dynamically based on local time
 function getWeekDates() {
   const today = new Date();
   const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
   
-  // Calculate difference to set Monday as day 1
   const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
   const monday = new Date(today);
   monday.setDate(diffToMonday);
@@ -206,7 +231,7 @@ function getWeekDates() {
   return dates;
 }
 
-// 2. Default professionally designed schedule matching CDC recommendations
+// Default schedule matching CDC recommendations
 const DEFAULT_SCHEDULE_BY_DAY_NAME: { [key: string]: string[] } = {
   "Monday": ["brisk-walk", "single-leg"],
   "Tuesday": ["chair-stand", "arm-curl"],
@@ -217,14 +242,12 @@ const DEFAULT_SCHEDULE_BY_DAY_NAME: { [key: string]: string[] } = {
   "Sunday": ["stretch-stretch"]
 };
 
-// Pure ID generator helper declared outside the component to avoid react-hooks/purity warnings
 function generateUniqueId(prefix: string): string {
   const stamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 6);
   return `${prefix}-${stamp}-${randomStr}`;
 }
 
-// Generate synthesizer chime to alert seniors gently (declared outside to remain static and pure)
 const playChime = () => {
   try {
     if (typeof window === 'undefined') return;
@@ -232,7 +255,6 @@ const playChime = () => {
     if (!AudioContext) return;
     const ctx = new AudioContext();
     
-    // Gentle chime C5
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
@@ -242,7 +264,6 @@ const playChime = () => {
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
     
-    // Warm Major Third E5
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
@@ -259,11 +280,11 @@ const playChime = () => {
   } catch (err) {
     console.warn("Audio Context failed to initialize automatically.", err);
   }
-};export default function SeniorFitnessDashboard() {
-  // Mounting check to prevent SSR hydration errors with localStorage
+};
+
+export default function SeniorFitnessDashboard() {
   const [mounted, setMounted] = useState(false);
   
-  // Custom Registration/Sign-In states
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return !!localStorage.getItem('senior_fitness_email');
@@ -280,7 +301,6 @@ const playChime = () => {
   
   const [emailInput, setEmailInput] = useState<string>('');
   
-  // Accessibility state (systematic bigger text sizing)
   const [largerText, setLargerText] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('senior_fitness_larger_text') === 'true';
@@ -289,11 +309,7 @@ const playChime = () => {
   });
   
   const [isSpeaking, setIsSpeaking] = useState(false);
-  
-  // Navigation Tabs state to combat crowded layout
   const [activeTab, setActiveTab] = useState<'welcome' | 'checklist' | 'timer' | 'progress'>('welcome');
-  
-  // Week dates state
   const [weekDays] = useState<any[]>(() => getWeekDates());
   
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -301,8 +317,10 @@ const playChime = () => {
     const todayObj = dates.find(d => d.isToday);
     return todayObj ? todayObj.dateString : dates[0].dateString;
   });
+
+  // Student Touch: Interactive step tracking so seniors don't lose place mid-exercise
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
-  // Database states personalized locally based on active email
   const [completedLogs, setCompletedLogs] = useState<CompletedLog[]>(() => {
     if (typeof window !== 'undefined') {
       const email = localStorage.getItem('senior_fitness_email');
@@ -335,30 +353,27 @@ const playChime = () => {
     return {};
   });
   
-  // Selected exercise detail view state (defaults to the first aerobic exercise)
   const [selectedExercise, setSelectedExercise] = useState<Exercise>(EXERCISES_DB[0]);
-  
-  // Timer States
   const [timerSecondsLeft, setTimerSecondsLeft] = useState<number>(600);
   const [timerInitialSeconds, setTimerInitialSeconds] = useState<number>(600);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [showCompletionPrompt, setShowCompletionPrompt] = useState<boolean>(false);
   
-  // Custom Log Modal States
   const [showCustomLogModal, setShowCustomLogModal] = useState<boolean>(false);
   const [customLogExerciseId, setCustomLogExerciseId] = useState<string>(EXERCISES_DB[0].id);
   const [customLogMinutes, setCustomLogMinutes] = useState<number>(10);
   
-  // Ref for speech synthesis
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Mark mounted after component mounts in client browser
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  // Sync state modifications back to local storage (keyed specifically by user profile email)
+  // Clear step tracker when user shifts to a new activity
+  useEffect(() => {
+    setCompletedSteps([]);
+  }, [selectedExercise]);
+
   useEffect(() => {
     if (mounted && isLoggedIn && userEmail) {
       const emailKey = userEmail.toLowerCase().trim();
@@ -373,14 +388,12 @@ const playChime = () => {
     }
   }, [customScheduledActivities, mounted, userEmail, isLoggedIn]);
 
-  // General text size preference
   useEffect(() => {
     if (mounted) {
       localStorage.setItem('senior_fitness_larger_text', String(largerText));
     }
   }, [largerText, mounted]);
 
-  // Clean speech synthesis on unmount
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -389,7 +402,6 @@ const playChime = () => {
     };
   }, []);
 
-  // Timer countdown hook
   useEffect(() => {
     let interval: any = null;
     if (isTimerRunning && timerSecondsLeft > 0) {
@@ -407,7 +419,6 @@ const playChime = () => {
     return () => clearInterval(interval);
   }, [isTimerRunning, timerSecondsLeft]);
 
-  // Handles custom sign-in submit
   const handleSignIn = (e?: React.FormEvent, guestEmail?: string) => {
     if (e) e.preventDefault();
     const emailToUse = guestEmail || emailInput.trim();
@@ -418,31 +429,21 @@ const playChime = () => {
     setIsLoggedIn(true);
 
     const emailKey = emailToUse.toLowerCase().trim();
-    // Load data synchronously for selected profile inside the event action to satisfy linter
     const savedLogs = localStorage.getItem(`senior_fitness_completed_logs_${emailKey}`);
     if (savedLogs) {
-      try {
-        setCompletedLogs(JSON.parse(savedLogs));
-      } catch (e) {
-        setCompletedLogs([]);
-      }
+      try { setCompletedLogs(JSON.parse(savedLogs)); } catch (e) { setCompletedLogs([]); }
     } else {
       setCompletedLogs([]);
     }
 
     const savedCustomSchedule = localStorage.getItem(`senior_fitness_custom_schedule_${emailKey}`);
     if (savedCustomSchedule) {
-      try {
-        setCustomScheduledActivities(JSON.parse(savedCustomSchedule));
-      } catch (e) {
-        setCustomScheduledActivities({});
-      }
+      try { setCustomScheduledActivities(JSON.parse(savedCustomSchedule)); } catch (e) { setCustomScheduledActivities({}); }
     } else {
       setCustomScheduledActivities({});
     }
   };
 
-  // Handles sign out/profile switching
   const handleSignOut = () => {
     localStorage.removeItem('senior_fitness_email');
     setUserEmail('');
@@ -455,7 +456,6 @@ const playChime = () => {
     }
   };
 
-  // Speaks instructions out loud using built-in speech synthesis
   const handleSpeakInstructions = (exercise: Exercise) => {
     if (!window.speechSynthesis) {
       alert("I am sorry, speech output is not fully supported on this web browser.");
@@ -477,7 +477,7 @@ const playChime = () => {
     `;
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.rate = 0.82; // Set rate slightly slower for ease of understanding
+    utterance.rate = 0.82; 
     utterance.pitch = 1.0;
     
     const voices = window.speechSynthesis.getVoices();
@@ -486,20 +486,14 @@ const playChime = () => {
       utterance.voice = englishVoice;
     }
 
-    utterance.onend = () => {
-      setIsSpeaking(false);
-    };
-
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-    };
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
 
     speechRef.current = utterance;
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
   };
 
-  // Get current day name from selectedDate
   const getSelectedDayDetails = () => {
     const found = weekDays.find(d => d.dateString === selectedDate);
     return found ? found : { dayName: 'Monday', isToday: false, dayOfMonth: 1 };
@@ -507,7 +501,6 @@ const playChime = () => {
 
   const selectedDayInfo = getSelectedDayDetails();
 
-  // Combine default professional exercises and custom-added exercises for the selected day
   const getActivitiesForSelectedDay = (): ScheduledActivity[] => {
     const dayName = selectedDayInfo.dayName;
     const defaultIds = DEFAULT_SCHEDULE_BY_DAY_NAME[dayName] || [];
@@ -525,14 +518,10 @@ const playChime = () => {
     });
 
     const customs = customScheduledActivities[selectedDate] || [];
-    
     const allActivities = [...defaults];
     customs.forEach(c => {
       const isCompleted = completedLogs.some(log => log.id === c.id || (log.dateString === selectedDate && log.name === c.name));
-      allActivities.push({
-        ...c,
-        completed: isCompleted
-      });
+      allActivities.push({ ...c, completed: isCompleted });
     });
 
     return allActivities;
@@ -540,7 +529,6 @@ const playChime = () => {
 
   const dailyActivitiesList = getActivitiesForSelectedDay();
 
-  // Log a completed activity
   const handleLogActivity = (name: string, minutes: number, category: 'aerobic' | 'strength' | 'balance' | 'stretch', customId?: string) => {
     const newLog: CompletedLog = {
       id: customId || generateUniqueId('log'),
@@ -551,19 +539,16 @@ const playChime = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    // Prevent duplicates for same activity name on same day
     const alreadyLogged = completedLogs.some(log => log.dateString === selectedDate && log.name === name);
     if (!alreadyLogged) {
       setCompletedLogs(prev => [newLog, ...prev]);
     }
   };
 
-  // Remove a completed workout log
   const handleRemoveLog = (id: string) => {
     setCompletedLogs(prev => prev.filter(log => log.id !== id));
   };
 
-  // Toggle complete directly from checklist button
   const handleToggleActivityCompletion = (activity: ScheduledActivity) => {
     if (activity.completed) {
       const foundLog = completedLogs.find(log => log.dateString === selectedDate && log.name === activity.name);
@@ -575,7 +560,6 @@ const playChime = () => {
     }
   };
 
-  // Selected workout sets the active exercise & updates active timer
   const handleSelectExercise = (exercise: Exercise) => {
     setSelectedExercise(exercise);
     setTimerInitialSeconds(exercise.minutes * 60);
@@ -588,14 +572,12 @@ const playChime = () => {
     }
   };
 
-  // Custom Quick Timer preset values
   const handleSetTimerPreset = (minutes: number) => {
     setTimerInitialSeconds(minutes * 60);
     setTimerSecondsLeft(minutes * 60);
     setIsTimerRunning(false);
   };
 
-  // Adjust timer up/down
   const handleAdjustTimer = (changeInMinutes: number) => {
     const currentMinutes = Math.floor(timerSecondsLeft / 60);
     let targetMinutes = currentMinutes + changeInMinutes;
@@ -607,7 +589,6 @@ const playChime = () => {
     setIsTimerRunning(false);
   };
 
-  // Calculate CDC Progress Metrics for the active week
   const getWeeklyProgressMetrics = () => {
     const totalAerobicMins = completedLogs
       .filter(log => log.category === 'aerobic')
@@ -634,7 +615,6 @@ const playChime = () => {
 
   const progress = getWeeklyProgressMetrics();
 
-  // Reset all user data
   const handleResetAllData = () => {
     const confirmClear = window.confirm("Are you sure you want to clear your fitness activity history and start a brand new week?");
     if (confirmClear) {
@@ -649,7 +629,6 @@ const playChime = () => {
     }
   };
 
-  // Handle saving a custom added schedule item
   const handleAddCustomScheduleItem = (e: React.FormEvent) => {
     e.preventDefault();
     const ex = EXERCISES_DB.find(e => e.id === customLogExerciseId) || EXERCISES_DB[0];
@@ -671,7 +650,6 @@ const playChime = () => {
     setShowCustomLogModal(false);
   };
 
-  // Format countdown text MM:SS
   const formatTimerDisplay = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
@@ -690,7 +668,6 @@ const playChime = () => {
     );
   }
 
-  // Scale font sizing classes dynamically based on preference
   const textScale = {
     title: largerText ? 'text-5xl md:text-6xl font-serif font-bold' : 'text-3xl md:text-4xl font-serif font-bold',
     subtitle: largerText ? 'text-2xl md:text-3xl font-medium' : 'text-base md:text-lg font-medium',
@@ -707,14 +684,12 @@ const playChime = () => {
     tab: largerText ? 'text-xl font-bold py-4 px-5' : 'text-sm font-bold py-2.5 px-3.5',
   };
 
-  // Render sign-in screen
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-[#FCFAF6] flex flex-col justify-between p-4 md:p-8 text-[#2D2D2D]" id="login-screen-root">
         <div className="max-w-2xl w-full mx-auto my-auto space-y-8 bg-white rounded-[32px] border-2 border-[#D3CEBE] p-6 md:p-10 shadow-[8px_8px_0px_0px_rgba(90,90,64,0.15)]">
           
           <div className="text-center space-y-4">
-            {/* Elegant Header */}
             <div className="inline-flex p-3.5 bg-[#1E3A8A]/10 text-[#1E3A8A] rounded-full">
               <Heart className="w-10 h-10 fill-current" />
             </div>
@@ -722,19 +697,18 @@ const playChime = () => {
             <h1 className={`${textScale.title} text-[#1E3A8A] leading-tight`}>
               Senior Fitness Scheduler
             </h1>
-            <p className={`${textScale.subtitle} text-[#5A5A40] max-w-lg mx-auto`}>
+            <p className={`${textScale.subtitle} text-[#4A473E] max-w-lg mx-auto`}>
               A friendly, easy-to-use tool designed for older adults to follow daily physical routines, use simple timers, and stay active safely.
             </p>
           </div>
 
-          {/* Simple Sign In Form */}
           <form 
             onSubmit={(e) => handleSignIn(e)}
             className="space-y-6 bg-[#FCFAF6] p-6 rounded-2xl border-2 border-[#E6E2D3] max-w-md mx-auto"
             id="email-signin-form"
           >
             <div className="space-y-2">
-              <label htmlFor="user-email-input" className={`${textScale.label} block text-[#5A5A40]`}>
+              <label htmlFor="user-email-input" className={`${textScale.label} block text-[#4A473E]`}>
                 Enter your Email to sign in:
               </label>
               <input
@@ -744,9 +718,9 @@ const playChime = () => {
                 placeholder="example@email.com"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                className={`w-full py-3.5 px-4 rounded-xl border-2 border-[#D3CEBE] focus:border-[#1E3A8A] focus:outline-none bg-white text-[#2D2D2D] font-medium ${textScale.body}`}
+                className={`w-full py-3.5 px-4 rounded-xl border-2 border-[#D3CEBE] bg-white text-[#2D2D2D] font-medium ${accessibleFocus} ${textScale.body}`}
               />
-              <p className={`${textScale.small} text-[#7A7667] leading-relaxed`}>
+              <p className={`${textScale.small} text-[#4A473E] leading-relaxed`}>
                 No password required! We use your email to safely separate your exercise checklist and history so multiple family members can use this device.
               </p>
             </div>
@@ -754,7 +728,7 @@ const playChime = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                className={`flex-1 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold rounded-xl shadow-sm cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`}
+                className={`flex-1 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold rounded-xl shadow-sm cursor-pointer transition-all active:scale-95 text-center ${accessibleFocus} ${textScale.btn}`}
                 style={{ minHeight: '52px' }}
               >
                 Sign In
@@ -763,7 +737,7 @@ const playChime = () => {
               <button
                 type="button"
                 onClick={() => handleSignIn(undefined, 'guest@seniorfitness.org')}
-                className={`bg-white border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#2D2D2D] font-bold rounded-xl cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`}
+                className={`bg-white border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#2D2D2D] font-bold rounded-xl cursor-pointer transition-all active:scale-95 text-center ${accessibleFocus} ${textScale.btn}`}
                 style={{ minHeight: '52px' }}
               >
                 Enter as Guest
@@ -771,12 +745,11 @@ const playChime = () => {
             </div>
           </form>
 
-          {/* Guidelines Banner In Login for initial explanation */}
-          <div className="bg-[#FAF7EE] p-5 rounded-2xl border border-[#E6E2D3] flex gap-4 items-start max-w-md mx-auto">
-            <Info className="w-5 h-5 text-[#5A5A40] shrink-0 mt-0.5" />
+          <div className="bg-[#FAF7EE] p-5 rounded-2xl border-2 border-[#D3CEBE] flex gap-4 items-start max-w-md mx-auto">
+            <Info className="w-5 h-5 text-[#1E3A8A] shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h4 className={`${textScale.small} font-bold text-[#5A5A40]`}>Official Healthy Aging Target:</h4>
-              <p className={`${textScale.small} text-[#7A7667] leading-relaxed`}>
+              <h4 className={`${textScale.small} font-bold text-[#1E3A8A]`}>Official Healthy Aging Target:</h4>
+              <p className={`${textScale.small} text-[#4A473E] leading-relaxed`}>
                 Aligns with the US Centers for Disease Control (CDC) recommendation of 150 aerobic minutes, 2 strength days, and 3 balance days per week.
               </p>
             </div>
@@ -784,8 +757,7 @@ const playChime = () => {
 
         </div>
 
-        {/* Simple Footer */}
-        <footer className="text-center py-6 text-[#7A7667] border-t border-[#E6E2D3] max-w-2xl w-full mx-auto mt-6">
+        <footer className="text-center py-6 text-[#4A473E] border-t border-[#E6E2D3] max-w-2xl w-full mx-auto mt-6">
           <p className={`${textScale.small} font-medium`}>
             Authorized Senior Physical Activity Guidelines Portal
           </p>
@@ -794,20 +766,18 @@ const playChime = () => {
     );
   }
 
-  // Render main user dashboard
   return (
     <div className="min-h-screen bg-[#FCFAF6] p-3 md:p-6 text-[#2D2D2D] flex flex-col justify-between" id="app-root-container">
       
       <div className="max-w-7xl mx-auto w-full space-y-6">
         
-        {/* Header section with profile details and accessibility controls */}
         <header className="bg-white rounded-[24px] p-4 md:p-6 border-2 border-[#D3CEBE] shadow-[4px_4px_0px_0px_rgba(90,90,64,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4" id="app-main-header">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold text-xs uppercase px-2.5 py-1 rounded-full">CDC Standard Exercises</span>
-              <span className="text-[#7A7667]">•</span>
-              <span className="text-xs text-[#7A7667] font-semibold flex items-center gap-1">
-                <UserCheck className="w-3 h-3 text-[#5A5A40]" /> Profile: <strong className="text-[#1E3A8A]">{userEmail}</strong>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold text-xs uppercase px-2.5 py-1 rounded-full border border-[#1E3A8A]/20">CDC Standard Exercises</span>
+              <span className="text-[#D3CEBE]">•</span>
+              <span className="text-xs text-[#4A473E] font-semibold flex items-center gap-1">
+                <UserCheck className="w-3 h-3 text-[#1E3A8A]" /> Profile: <strong className="text-[#1E3A8A]">{userEmail}</strong>
               </span>
             </div>
             <h1 className={`${textScale.h2} font-serif text-[#1E3A8A]`} id="main-title">
@@ -815,18 +785,16 @@ const playChime = () => {
             </h1>
           </div>
 
-          {/* Quick header controls with larger accessibility buttons */}
           <div className="flex flex-wrap gap-2.5 w-full md:w-auto" id="header-controls">
             <button
               onClick={() => setLargerText(!largerText)}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 transition-all font-bold cursor-pointer ${
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 transition-all font-bold cursor-pointer ${accessibleFocus} ${
                 largerText
                   ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white hover:bg-[#1A3073]'
                   : 'bg-[#F9F8F4] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'
               }`}
               style={{ minHeight: '48px' }}
               id="text-size-toggle-btn"
-              title="Increase or decrease app text size"
             >
               <Accessibility className="w-5 h-5 shrink-0" />
               <span className={textScale.btnSmall}>{largerText ? '🔠 Regular Text' : '🔠 Make Text BIGGER'}</span>
@@ -834,9 +802,8 @@ const playChime = () => {
 
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#F9F8F4] text-[#7A7667] border-2 border-[#D3CEBE] rounded-xl font-bold transition-all cursor-pointer"
+              className={`flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#F9F8F4] text-[#4A473E] border-2 border-[#D3CEBE] rounded-xl font-bold transition-all cursor-pointer ${accessibleFocus}`}
               style={{ minHeight: '48px' }}
-              title="Switch user email account"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span className={textScale.btnSmall}>Switch User</span>
@@ -844,14 +811,13 @@ const playChime = () => {
           </div>
         </header>
 
-        {/* ACCESS NAVIGATION TABS: Completely cleans up the crowded look */}
         <div className="grid grid-cols-2 md:flex md:flex-row gap-2.5 w-full bg-white p-2.5 rounded-[24px] border-2 border-[#D3CEBE] shadow-[4px_4px_0px_0px_rgba(90,90,64,0.15)]" id="navigation-tabs-bar">
           <button
             onClick={() => setActiveTab('welcome')}
-            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${textScale.tab} ${
+            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${accessibleFocus} ${textScale.tab} ${
               activeTab === 'welcome'
                 ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold'
-                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#E6E2D3] font-medium'
+                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#D3CEBE] font-medium'
             }`}
           >
             <Heart className="w-4 h-4 shrink-0" />
@@ -860,10 +826,10 @@ const playChime = () => {
 
           <button
             onClick={() => setActiveTab('checklist')}
-            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${textScale.tab} ${
+            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${accessibleFocus} ${textScale.tab} ${
               activeTab === 'checklist'
                 ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold'
-                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#E6E2D3] font-medium'
+                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#D3CEBE] font-medium'
             }`}
           >
             <CalendarIcon className="w-4 h-4 shrink-0" />
@@ -872,10 +838,10 @@ const playChime = () => {
           
           <button
             onClick={() => setActiveTab('timer')}
-            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${textScale.tab} ${
+            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${accessibleFocus} ${textScale.tab} ${
               activeTab === 'timer'
                 ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold'
-                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#E6E2D3] font-medium'
+                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#D3CEBE] font-medium'
             }`}
           >
             <TimerIcon className="w-4 h-4 shrink-0" />
@@ -884,10 +850,10 @@ const playChime = () => {
           
           <button
             onClick={() => setActiveTab('progress')}
-            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${textScale.tab} ${
+            className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${accessibleFocus} ${textScale.tab} ${
               activeTab === 'progress'
                 ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold'
-                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#E6E2D3] font-medium'
+                : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#D3CEBE] font-medium'
             }`}
           >
             <Award className="w-4 h-4 shrink-0" />
@@ -895,81 +861,73 @@ const playChime = () => {
           </button>
         </div>
 
-        {/* MAIN BODY AREA: Dynamic content based on currently selected tab */}
         <main className="w-full" id="active-tab-content">
           
           {/* TAB 0: WELCOME HUB PORTAL */}
           {activeTab === 'welcome' && (
             <div className="space-y-6 animate-fadeIn" id="welcome-tab-view">
-              
-              {/* Dynamic Friendly Greeting Header */}
               <div className="bg-gradient-to-r from-[#1E3A8A] to-[#1E40AF] text-white rounded-[32px] p-6 md:p-8 border-2 border-[#1E3A8A] shadow-[6px_6px_0px_0px_rgba(30,58,138,0.2)]">
                 <div className="max-w-3xl space-y-3">
                   <h2 className={`${textScale.title} font-serif text-white`}>
                     Welcome back! Let&apos;s Stay Active & Balanced.
                   </h2>
-                  
                   <div className="pt-2 flex flex-wrap items-center gap-4">
-                    <span className={`${textScale.small} text-blue-100 font-semibold bg-white/10 px-3 py-1 rounded-md`}>
+                    <span className={`${textScale.small} text-blue-100 font-semibold bg-white/10 px-3 py-1 rounded-md border border-white/10`}>
                       👤 Profile: <strong>{userEmail}</strong>
                     </span>
-                    <span className={`${textScale.small} text-blue-100 font-semibold bg-white/10 px-3 py-1 rounded-md`}>
+                    <span className={`${textScale.small} text-blue-100 font-semibold bg-white/10 px-3 py-1 rounded-md border border-white/10`}>
                       📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Quick Summary Widgets Deck */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Metric 1 */}
                 <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
-                  <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>Today&apos;s Workout</span>
+                  <span className={`${textScale.small} text-[#4A473E] font-bold uppercase`}>Today&apos;s Workout</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-[#1E3A8A] rounded-xl border border-blue-100">
+                    <div className="p-2.5 bg-blue-50 text-[#1E3A8A] rounded-xl border border-blue-200">
                       <CalendarIcon className="w-5 h-5" />
                     </div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>
                         {dailyActivitiesList.length} scheduled
                       </p>
-                      <p className="text-xs text-[#7A7667]">
+                      <p className="text-xs text-[#4A473E] font-semibold">
                         {dailyActivitiesList.filter(a => a.completed).length} completed today
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Metric 2 */}
                 <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
-                  <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>My Active Timer</span>
+                  <span className={`${textScale.small} text-[#4A473E] font-bold uppercase`}>My Active Timer</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl border border-amber-100">
+                    <div className="p-2.5 bg-amber-50 text-amber-800 rounded-xl border border-amber-200">
                       <TimerIcon className="w-5 h-5" />
                     </div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>
                         {selectedExercise.name}
                       </p>
-                      <p className="text-xs text-[#7A7667]">
+                      <p className="text-xs text-[#4A473E] font-semibold">
                         Ready to start ({selectedExercise.minutes} mins)
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Metric 3 */}
                 <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
-                  <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>Weekly Goal Progress</span>
+                  <span className={`${textScale.small} text-[#4A473E] font-bold uppercase`}>Weekly Goal Progress</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+                    <div className="p-2.5 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200">
                       <Award className="w-5 h-5" />
                     </div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>
                         {progress.aerobicMins} / 150m Aerobic
                       </p>
-                      <p className="text-xs text-[#7A7667]">
+                      <p className="text-xs text-[#4A473E] font-semibold">
                         {progress.strengthDays}/2 Strength • {progress.balanceDays}/3 Balance
                       </p>
                     </div>
@@ -977,808 +935,600 @@ const playChime = () => {
                 </div>
               </div>
 
-              {/* CDC Style Gateway Quick Navigation */}
               <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-6 space-y-5 shadow-sm">
                 <div>
                   <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Where would you like to go today?</h3>
-                  <p className={`${textScale.bodySmall} text-[#5A5A40] mt-0.5`}>
+                  <p className={`${textScale.bodySmall} text-[#4A473E] mt-0.5`}>
                     Tap any card below or select from the tabs at the top of the page.
                   </p>
                 </div>
-
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  
-                  {/* Card 1 */}
-                  <button
-                    onClick={() => setActiveTab('checklist')}
-                    className="group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4"
+                  <button 
+                    onClick={() => setActiveTab('checklist')} 
+                    className={`group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4 ${accessibleFocus}`}
                     style={{ minHeight: '160px' }}
                   >
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
+                    <div className="p-3 bg-white border-2 border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
                       <CalendarIcon className="w-6 h-6" />
                     </div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline flex items-center gap-1`}>
                         My Checklist &rarr;
                       </h4>
-                      <p className={`${textScale.small} text-[#5A5A40] mt-1 leading-relaxed`}>
+                      <p className={`${textScale.small} text-[#4A473E] mt-1 leading-relaxed`}>
                         Select a day of the week, view your daily exercises, and mark tasks as complete.
                       </p>
                     </div>
                   </button>
 
-                  {/* Card 2 */}
-                  <button
-                    onClick={() => setActiveTab('timer')}
-                    className="group text-left p-5 bg-[#FCFAF6] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4"
+                  <button 
+                    onClick={() => setActiveTab('timer')} 
+                    className={`group text-left p-5 bg-[#FCFAF6] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4 ${accessibleFocus}`}
                     style={{ minHeight: '160px' }}
                   >
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
+                    <div className="p-3 bg-white border-2 border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
                       <TimerIcon className="w-6 h-6" />
                     </div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline flex items-center gap-1`}>
                         Active Timer &rarr;
                       </h4>
-                      <p className={`${textScale.small} text-[#5A5A40] mt-1 leading-relaxed`}>
+                      <p className={`${textScale.small} text-[#4A473E] mt-1 leading-relaxed`}>
                         Follow the current exercise with simple safe guides and a large, clear timer clock.
                       </p>
                     </div>
                   </button>
 
-                  {/* Card 3 */}
-                  <button
-                    onClick={() => setActiveTab('progress')}
-                    className="group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4"
+                  <button 
+                    onClick={() => setActiveTab('progress')} 
+                    className={`group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all active:scale-98 flex flex-col justify-between space-y-4 ${accessibleFocus}`}
                     style={{ minHeight: '160px' }}
                   >
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
+                    <div className="p-3 bg-white border-2 border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block">
                       <Award className="w-6 h-6" />
                     </div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline flex items-center gap-1`}>
                         CDC Progress &rarr;
                       </h4>
-                      <p className={`${textScale.small} text-[#5A5A40] mt-1 leading-relaxed`}>
-                        Track your weekly active minutes and goals against official guidelines.
+                      <p className={`${textScale.small} text-[#4A473E] mt-1 leading-relaxed`}>
+                        Track your weekly active minutes and goals.
                       </p>
                     </div>
                   </button>
-
                 </div>
               </div>
-
-              {/* CDC Safe Physical Activity Guide & Text to Speech */}
-              <div className="w-full bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 space-y-4 shadow-sm flex flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="text-[#1E3A8A] font-bold text-xs uppercase tracking-wider block bg-blue-50 py-1 px-2.5 rounded-md border border-blue-100/60 inline-block">
-                    🛡️ Safe Exercise Protocols
-                  </span>
-                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Essential Safe-Aging Principles</h3>
-                  <p className={`${textScale.bodySmall} text-[#5A5A40] leading-relaxed`}>
-                    Your safety is our top priority! Please review these simple guidelines before beginning:
-                  </p>
-                  
-                  <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[#2D2D2D] pt-2">
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">🛋️</span>
-                      <p className={`${textScale.small} leading-relaxed`}>
-                        <strong>Stable Support:</strong> Keep a heavy, non-moving chair, table, or wall within arm&apos;s reach when doing balance tasks.
-                      </p>
-                    </li>
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">💧</span>
-                      <p className={`${textScale.small} leading-relaxed`}>
-                        <strong>Stay Hydrated:</strong> Sip water before, during, and after exercises, even if you do not feel thirsty.
-                      </p>
-                    </li>
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">🛑</span>
-                      <p className={`${textScale.small} leading-relaxed`}>
-                        <strong>Stop on Pain:</strong> Movement should feel warm and active, never painful. Stop if you feel any joint pain or chest tightness.
-                      </p>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="pt-4 border-t border-[#E6E2D3] flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (!window.speechSynthesis) {
-                        alert("I am sorry, voice guidelines are not fully supported on this web browser.");
-                        return;
-                      }
-                      if (isSpeaking) {
-                        window.speechSynthesis.cancel();
-                        setIsSpeaking(false);
-                        return;
-                      }
-                      const text = `
-                        Essential Safe Aging Principles. 
-                        Number 1, Stable Support: Keep a heavy, non moving chair, table, or wall within arm's reach when doing balance tasks. 
-                        Number 2, Stay Hydrated: Sip water before, during, and after exercises, even if you do not feel thirsty. 
-                        Number 3, Stop on Pain: Movement should feel warm and active, never painful. Stop if you feel any joint pain or chest tightness. 
-                        Stay safe and enjoy your daily physical routine!
-                      `;
-                      const u = new SpeechSynthesisUtterance(text);
-                      u.rate = 0.8;
-                      u.onend = () => setIsSpeaking(false);
-                      u.onerror = () => setIsSpeaking(false);
-                      setIsSpeaking(true);
-                      window.speechSynthesis.speak(u);
-                    }}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold border-2 transition-all cursor-pointer ${
-                      isSpeaking
-                        ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse'
-                        : 'bg-[#FCFAF6] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'
-                    }`}
-                    style={{ minHeight: '48px' }}
-                  >
-                    {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5 text-[#1E3A8A]" />}
-                    <span className={textScale.btnSmall}>{isSpeaking ? "Pause Voice Guide" : "🔊 Listen to Safety Guidelines"}</span>
-                  </button>
-                  <p className="text-[11px] text-[#7A7667] leading-tight text-center sm:text-left">
-                    Need help reading? Tap to hear the safety rules read out loud.
-                  </p>
-                </div>
-              </div>
-
             </div>
           )}
 
-          {/* TAB 1: DAILY ROUTINE AND CHECKLIST */}
+          {/* TAB 1: CALENDAR CHECKLIST TAB */}
           {activeTab === 'checklist' && (
-            <div className="space-y-6" id="checklist-tab-view">
+            <div className="space-y-6 animate-fadeIn" id="checklist-tab-view">
               
-              {/* Instructions Callout */}
-              <div className="bg-[#FAF7EE] border-2 border-[#D3CEBE] rounded-3xl p-5 flex gap-4 items-center shadow-xs">
-                <CalendarIcon className="w-6 h-6 text-[#1E3A8A] shrink-0" />
-                <p className={`${textScale.bodySmall} text-[#5A5A40] leading-relaxed`}>
-                  Tap any day below to see recommended exercises. Tap an exercise name to start its countdown timer!
-                </p>
-              </div>
-
-              {/* Weekly Calendar Component */}
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-4 md:p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E6E2D3]">
-                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Weekly Calendar Row</h3>
-                  <span className={`${textScale.small} text-[#7A7667] font-bold bg-[#FCFAF6] py-1 px-3 rounded-full border border-[#D3CEBE]`}>
-                    Click Day to View
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2" id="weekly-days-grid">
+              {/* Geometric Grid for Week Navigation */}
+              <div className="bg-white border-2 border-[#D3CEBE] p-4 rounded-2xl shadow-sm">
+                <p className={`${textScale.label} text-[#4A473E] mb-3`}>📅 Choose a Day to view Routine:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
                   {weekDays.map((day) => {
                     const isSelected = selectedDate === day.dateString;
                     return (
                       <button
                         key={day.dateString}
-                        onClick={() => {
-                          setSelectedDate(day.dateString);
-                          const dayName = day.dayName;
-                          const defaultIds = DEFAULT_SCHEDULE_BY_DAY_NAME[dayName] || [];
-                          if (defaultIds.length > 0) {
-                            const ex = EXERCISES_DB.find(e => e.id === defaultIds[0]);
-                            if (ex) handleSelectExercise(ex);
-                          }
-                        }}
-                        className={`flex flex-col items-center justify-center py-4 rounded-xl transition-all cursor-pointer border-2 ${
+                        onClick={() => setSelectedDate(day.dateString)}
+                        className={`p-3 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center cursor-pointer ${accessibleFocus} ${
                           isSelected
-                            ? 'bg-[#1E3A8A] text-white border-[#1E3A8A] shadow-md ring-4 ring-[#1E3A8A]/10 font-bold'
-                            : day.isToday
-                            ? 'bg-[#FAF7EE] text-[#1E3A8A] border-2 border-[#1E3A8A]'
-                            : 'bg-[#FCFAF6] hover:bg-[#F5F2EB] border-[#D3CEBE] text-[#5A5A40]'
+                            ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs'
+                            : 'bg-[#FCFAF6] border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#2D2D2D]'
                         }`}
-                        style={{ minHeight: '85px' }}
-                        title={`View activities for ${day.dayName}`}
                       >
-                        <span className={`${textScale.small} font-bold uppercase tracking-wider block opacity-85`}>
-                          {day.dayName.substring(0, 3)}
-                        </span>
-                        <span className={`font-serif font-black mt-1 ${largerText ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
-                          {day.dayOfMonth}
-                        </span>
+                        <span className="text-xs font-bold uppercase tracking-tight opacity-80">{day.dayName.substring(0,3)}</span>
+                        <span className="text-xl font-bold mt-0.5">{day.dayOfMonth}</span>
                         {day.isToday && (
-                          <span className={`uppercase font-bold mt-1 bg-white/10 px-1.5 py-0.5 rounded text-[#1E3A8A] border border-[#1E3A8A]/20 ${largerText ? 'text-xs md:text-sm' : 'text-[10px]'}`}>
-                            Today
-                          </span>
+                          <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded-md mt-1 ${
+                            isSelected ? 'bg-white text-[#1E3A8A]' : 'bg-[#1E3A8A] text-white'
+                          }`}>Today</span>
                         )}
                       </button>
                     );
                   })}
                 </div>
-
-                <div className="bg-[#FCFAF6] p-4 rounded-xl border border-[#D3CEBE] flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
-                  <div>
-                    <span className={`${textScale.small} uppercase font-bold tracking-wider text-[#7A7667]`}>Day selected:</span>
-                    <p className={`${textScale.h4} text-[#1E3A8A]`}>
-                      {selectedDayInfo.dayName}, {selectedDayInfo.monthLabel} {selectedDayInfo.dayOfMonth} {selectedDayInfo.isToday ? "(Today!)" : ""}
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={() => {
-                      setCustomLogMinutes(10);
-                      setShowCustomLogModal(true);
-                    }}
-                    className="flex items-center gap-1.5 py-3 px-5 bg-white border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] active:scale-95 text-[#2D2D2D] rounded-xl font-bold transition-all text-xs cursor-pointer shadow-sm"
-                  >
-                    <Plus className="w-4 h-4 text-[#1E3A8A]" /> Add Custom Activity
-                  </button>
-                </div>
               </div>
 
-              {/* Routine checklist cards */}
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-4 md:p-6 shadow-sm">
-                <div className="border-b border-[#E6E2D3] pb-3 mb-4">
-                  <h3 className={`${textScale.h3} text-[#1E3A8A] flex items-center gap-2`}>
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                    <span>Routine Checklist for this Day</span>
+              {/* Checklist Controller Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border-2 border-[#D3CEBE]">
+                <div>
+                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>
+                    {selectedDayInfo.dayName}&apos;s Exercise List
                   </h3>
+                  <p className={`${textScale.bodySmall} text-[#4A473E]`}>
+                    Follow the recommended guidelines or add items manually below.
+                  </p>
                 </div>
+                
+                <button
+                  onClick={() => setShowCustomLogModal(true)}
+                  className={`w-full sm:w-auto bg-white hover:bg-[#FCFAF6] text-[#1E3A8A] font-bold border-2 border-[#1E3A8A] px-5 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${accessibleFocus}`}
+                  style={{ minHeight: '48px' }}
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>➕ Add Custom Exercise</span>
+                </button>
+              </div>
 
+              {/* Routine Item Checklist Renderer */}
+              <div className="space-y-4">
                 {dailyActivitiesList.length === 0 ? (
-                  <div className="text-center py-10 text-[#7A7667] bg-[#FCFAF6] rounded-2xl border-2 border-dashed border-[#D3CEBE]">
-                    <p className={textScale.body}>No physical exercises scheduled for this day.</p>
-                    <button
-                      onClick={() => setShowCustomLogModal(true)}
-                      className="mt-3 py-3 px-5 bg-[#FAF7EE] border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#1E3A8A] text-sm font-bold rounded-xl transition-all cursor-pointer"
-                    >
-                      Schedule Custom Activity
-                    </button>
+                  <div className="text-center py-12 bg-white border-2 border-dashed border-[#D3CEBE] rounded-2xl">
+                    <BookOpen className="w-12 h-12 text-[#4A473E] mx-auto opacity-40 mb-3" />
+                    <p className={`${textScale.body} text-[#4A473E] font-medium`}>No routine events mapped for this day.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="routine-checklist-grid">
-                    {dailyActivitiesList.map((activity) => {
-                      const matchedDbEx = EXERCISES_DB.find(e => e.id === activity.exerciseId || e.name === activity.name);
-                      const isSelected = selectedExercise.name === activity.name;
-
-                      return (
-                        <div
-                          key={activity.id}
-                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                            isSelected
-                              ? 'bg-[#FAF7EE] border-[#1E3A8A] ring-4 ring-[#1E3A8A]/10'
-                              : 'bg-white border-[#D3CEBE] hover:bg-[#FCFAF6]'
-                          }`}
-                        >
-                          {/* Left text clicking opens timer */}
-                          <div 
-                            className="flex-1 cursor-pointer pr-4 min-w-0"
-                            onClick={() => {
-                              if (matchedDbEx) {
-                                handleSelectExercise(matchedDbEx);
-                                setActiveTab('timer'); // auto jump to timer
-                              }
-                            }}
-                            title="Click to view guides & start timer"
-                          >
-                            <span className={`${textScale.small} font-bold text-[#7A7667] uppercase`}>
-                              {activity.category}
-                            </span>
-                            <h4 className={`${textScale.h4} text-[#2D2D2D] truncate font-medium`}>
-                              {activity.name}
-                            </h4>
-                            <p className={`${textScale.small} text-[#1E3A8A] font-semibold mt-0.5 flex items-center gap-1`}>
-                              <TimerIcon className="w-3.5 h-3.5" /> {activity.minutes} mins • View Guide &rarr;
-                            </p>
-                          </div>
-
-                          {/* Large touch-friendly complete check box */}
+                  dailyActivitiesList.map((activity) => {
+                    const theme = CATEGORY_THEMES[activity.category] || CATEGORY_THEMES.balance;
+                    const baseEx = EXERCISES_DB.find(e => e.id === activity.exerciseId) || EXERCISES_DB[0];
+                    
+                    return (
+                      <div
+                        key={activity.id}
+                        className={`border-2 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xs transition-all ${theme.bg}`}
+                      >
+                        <div className="flex items-start gap-4 flex-1">
+                          {/* Checked Checkbox Large Click Target */}
                           <button
                             onClick={() => handleToggleActivityCompletion(activity)}
-                            className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                              activity.completed
-                                ? 'bg-emerald-600 border-emerald-600 text-white'
-                                : 'bg-[#FCFAF6] border-[#D3CEBE] hover:border-[#1E3A8A] text-[#1E3A8A]'
+                            className={`w-10 h-10 rounded-xl border-2 bg-white shrink-0 flex items-center justify-center cursor-pointer transition-all ${accessibleFocus} ${
+                              activity.completed ? 'border-emerald-600 text-emerald-600 bg-emerald-50' : 'border-[#D3CEBE] hover:border-[#1E3A8A]'
                             }`}
-                            style={{ minWidth: '56px', minHeight: '56px' }}
-                            title={`Mark ${activity.name} as ${activity.completed ? 'not completed' : 'completed'}`}
+                            aria-label={`Mark ${activity.name} as complete`}
                           >
-                            {activity.completed ? (
-                              <CheckCircle2 className="w-7 h-7" />
-                            ) : (
-                              <div className="w-5 h-5 rounded bg-white border-2 border-[#D3CEBE]" />
-                            )}
+                            {activity.completed && <CheckCircle2 className="w-6 h-6 fill-current text-emerald-600" />}
+                          </button>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className={`${textScale.h4} font-serif font-bold ${activity.completed ? 'line-through opacity-60' : ''}`}>
+                                {activity.name}
+                              </h4>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${theme.badge}`}>
+                                {theme.icon} {activity.category}
+                              </span>
+                              <span className="text-xs bg-white/80 border border-[#D3CEBE] text-[#2D2D2D] font-bold px-2 py-0.5 rounded-md">
+                                ⏱️ {activity.minutes} Mins
+                              </span>
+                            </div>
+                            <p className={`${textScale.small} text-[#4A473E] leading-relaxed max-w-2xl`}>
+                              {baseEx.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="w-full md:w-auto shrink-0">
+                          <button
+                            onClick={() => handleSelectExercise(baseEx)}
+                            className={`w-full md:w-auto px-5 py-3 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${accessibleFocus}`}
+                            style={{ minHeight: '46px' }}
+                          >
+                            <TimerIcon className="w-4 h-4" />
+                            <span>🎯 Open in Timer</span>
                           </button>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
-
             </div>
           )}
 
-          {/* TAB 2: ACTIVE TIMER COMPANION VIEW */}
+          {/* TAB 2: ACTIVE TIMER VIEW */}
           {activeTab === 'timer' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="timer-tab-view">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn" id="timer-tab-view">
               
-              {/* Left Column: Guidance & Audio instructions (6 cols) */}
-              <div className="lg:col-span-6 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 space-y-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E6E2D3] pb-4 gap-4">
-                  <div>
-                    <span className={`${textScale.small} font-bold text-[#7A7667] uppercase block mb-0.5`}>Active Focus:</span>
-                    <h2 className={`${textScale.h2} text-[#1E3A8A]`}>{selectedExercise.name}</h2>
+              {/* Left Column: Big Display Clock */}
+              <div className="lg:col-span-5 bg-white border-2 border-[#D3CEBE] p-6 rounded-[28px] shadow-sm flex flex-col justify-between items-center text-center space-y-6">
+                <div className="w-full">
+                  <span className={`${textScale.label} text-[#4A473E] block`}>⏱️ Countdown Clock</span>
+                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif font-bold mt-1`}>{selectedExercise.name}</h3>
+                </div>
+
+                <div className="py-4 my-auto">
+                  <div className={`${textScale.timerText} text-[#2D2D2D] tracking-tight tabular-nums select-none`}>
+                    {formatTimerDisplay(timerSecondsLeft)}
+                  </div>
+                </div>
+
+                {/* Primary Action Row with padding increments */}
+                <div className="w-full space-y-4">
+                  <div className="flex gap-3 justify-center items-center">
+                    <button
+                      onClick={() => handleAdjustTimer(-1)}
+                      className={`w-14 h-14 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-xl cursor-pointer shadow-xs ${accessibleFocus}`}
+                    >
+                      -1m
+                    </button>
+
+                    <button
+                      onClick={() => setIsTimerRunning(!isTimerRunning)}
+                      className={`flex-1 py-4 px-6 rounded-2xl font-bold text-xl text-white shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${accessibleFocus} ${
+                        isTimerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                      style={{ minHeight: '60px' }}
+                    >
+                      {isTimerRunning ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                      <span>{isTimerRunning ? 'Pause Clock' : 'Start Workout'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAdjustTimer(1)}
+                      className={`w-14 h-14 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-xl cursor-pointer shadow-xs ${accessibleFocus}`}
+                    >
+                      +1m
+                    </button>
                   </div>
 
-                  {/* Gentle text to speech read button */}
                   <button
-                    onClick={() => handleSpeakInstructions(selectedExercise)}
-                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold border-2 transition-all cursor-pointer ${
-                      isSpeaking
-                        ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse'
-                        : 'bg-[#FCFAF6] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'
-                    }`}
-                    style={{ minHeight: '48px' }}
-                    title="Read instructions out loud to you"
+                    onClick={() => handleSetTimerPreset(Math.floor(timerInitialSeconds / 60))}
+                    className={`w-full py-3 bg-white hover:bg-[#FCFAF6] border-2 border-[#D3CEBE] text-[#4A473E] rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${accessibleFocus}`}
+                    style={{ minHeight: '44px' }}
                   >
-                    {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5 text-[#1E3A8A]" />}
-                    <span className={textScale.btnSmall}>{isSpeaking ? "Pause Voice" : "🔊 Hear Guide"}</span>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Reset Timer to {Math.floor(timerInitialSeconds / 60)}m</span>
                   </button>
                 </div>
 
-                <div className={`${textScale.body} text-[#2D2D2D] bg-[#FCFAF6] p-5 rounded-2xl border-2 border-[#E6E2D3]`}>
-                  <p className="leading-relaxed font-medium">{selectedExercise.description}</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className={`${textScale.h4} text-[#1E3A8A] flex items-center gap-2 border-b border-[#FCFAF6] pb-2`}>
-                    <BookOpen className="w-5 h-5 text-[#1E3A8A]" />
-                    <span>How to perform safely:</span>
-                  </h3>
-
-                  <ol className="space-y-3">
-                    {selectedExercise.instructions.map((step, idx) => (
-                      <li key={idx} className="flex gap-4 items-start">
-                        <span className="w-9 h-9 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold flex items-center justify-center shrink-0 text-base border border-[#1E3A8A]/10">
-                          {idx + 1}
-                        </span>
-                        <p className={`${textScale.bodySmall} text-[#2D2D2D] pt-1 leading-relaxed`}>{step}</p>
-                      </li>
+                {/* Grid for quick adjustments */}
+                <div className="w-full pt-4 border-t border-[#E6E2D3]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#4A473E] mb-2">⏱️ Quick Preset Minutes</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[5, 10, 15, 20].map((mins) => (
+                      <button
+                        key={mins}
+                        onClick={() => handleSetTimerPreset(mins)}
+                        className={`py-2 px-1 bg-[#FCFAF6] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-lg font-bold text-xs cursor-pointer ${accessibleFocus}`}
+                      >
+                        {mins} Min
+                      </button>
                     ))}
-                  </ol>
-                </div>
-
-                {/* Highly Visible Safety Warning Banner */}
-                <div className="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl flex gap-3 items-start">
-                  <Info className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <h4 className={`${textScale.small} font-bold text-rose-950`}>Elderly Safety First:</h4>
-                    <p className={`${textScale.small} text-rose-900 leading-relaxed`}>
-                      {selectedExercise.safetyTip}
-                    </p>
                   </div>
                 </div>
+
               </div>
 
-              {/* Right Column: Physical High-Contrast Big Timer (6 cols) */}
-              <div className="lg:col-span-6 bg-[#1E3A8A] text-white rounded-[28px] border-2 border-[#1E3A8A] p-5 md:p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(30,58,138,0.2)]">
+              {/* Right Column: Exercise Instructions Details */}
+              <div className="lg:col-span-7 bg-white border-2 border-[#D3CEBE] p-6 rounded-[28px] shadow-sm space-y-5">
                 
-                <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-6">
-                  <div className="flex items-center gap-2">
-                    <TimerIcon className="w-5 h-5 text-white/80" />
-                    <h3 className={`${textScale.h3} text-white`}>Exercise Companion Timer</h3>
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-[#E6E2D3] pb-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
+                      Exercise Guide
+                    </span>
+                    <h2 className={`${textScale.h2} text-[#1E3A8A] font-serif`}>
+                      {selectedExercise.name}
+                    </h2>
                   </div>
-                  <span className={`${textScale.small} bg-white/10 px-3 py-1 rounded-full uppercase font-bold text-white`}>
-                    Target: {selectedExercise.minutes} min
-                  </span>
+
+                  <button
+                    onClick={() => handleSpeakInstructions(selectedExercise)}
+                    className={`w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition-all border-2 ${accessibleFocus} ${
+                      isSpeaking 
+                        ? 'bg-red-50 border-red-400 text-red-700' 
+                        : 'bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100'
+                    }`}
+                  >
+                    {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    <span>{isSpeaking ? '🛑 Stop Reading' : '🔊 Read Out Loud'}</span>
+                  </button>
                 </div>
 
-                <div className="text-center py-6">
-                  {/* Huge accessible digital countdown readout */}
-                  <div className={`${textScale.timerText} tracking-wider py-5 px-6 bg-white/10 rounded-2xl border border-white/20 inline-block text-white`}>
-                    {formatTimerDisplay(timerSecondsLeft)}
-                  </div>
-                  <p className={`${textScale.small} text-white/75 mt-3 font-bold uppercase tracking-wider`}>
-                    Minutes : Seconds Remaining
-                  </p>
-                </div>
-
-                {/* Quick adjustments */}
                 <div className="space-y-4">
-                  <p className={`${textScale.small} text-center font-bold text-white/90 uppercase tracking-widest`}>
-                    Adjust Time / Presets
-                  </p>
-                  
-                  <div className="flex justify-center gap-2 flex-wrap">
-                    {[1, 5, 10, 15, 30].map((mins) => {
-                      const isCurrent = (timerInitialSeconds === mins * 60);
+                  <div className="space-y-3">
+                    <p className={`${textScale.small} text-[#4A473E] font-bold uppercase tracking-wide`}>
+                      📋 Step-by-Step Guide (Tap a step to mark your place):
+                    </p>
+                    
+                    {selectedExercise.instructions.map((step, idx) => {
+                      const isStepDone = completedSteps.includes(idx);
                       return (
                         <button
-                          key={mins}
-                          onClick={() => handleSetTimerPreset(mins)}
-                          className={`py-2 px-3.5 rounded-lg border text-sm transition-all font-bold cursor-pointer ${
-                            isCurrent
-                              ? 'bg-white border-white text-[#1E3A8A] shadow-md'
-                              : 'bg-white/15 border-white/10 hover:bg-white/25 text-white'
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setCompletedSteps(prev => 
+                              prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+                            );
+                          }}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all flex gap-4 items-center ${accessibleFocus} ${
+                            isStepDone 
+                              ? 'bg-emerald-50 border-emerald-400 text-emerald-950 line-through' 
+                              : 'bg-white border-[#D3CEBE] hover:border-[#1E3A8A] text-[#2D2D2D]'
                           }`}
+                          style={{ minHeight: '60px' }}
                         >
-                          {mins} min
+                          <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${
+                            isStepDone ? 'bg-emerald-600 text-white' : 'bg-[#FCFAF6] border border-[#D3CEBE]'
+                          }`}>
+                            {isStepDone ? '✓' : idx + 1}
+                          </span>
+                          <span className={`${textScale.bodySmall} font-medium`}>{step}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="flex gap-2 w-full max-w-xs mx-auto">
-                    <button
-                      onClick={() => handleAdjustTimer(-1)}
-                      className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-white font-bold text-sm cursor-pointer text-center"
-                    >
-                      ➖ 1 Min
-                    </button>
-                    <button
-                      onClick={() => handleAdjustTimer(1)}
-                      className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-white font-bold text-sm cursor-pointer text-center"
-                    >
-                      ➕ 1 Min
-                    </button>
+                  {/* Student Touch: Clear physical safety disclaimer block */}
+                  <div className="bg-amber-50 border-2 border-dashed border-amber-400 p-5 rounded-2xl flex gap-4 items-start">
+                    <span className="text-3xl shrink-0" role="img" aria-label="Safety Alert">⚠️</span>
+                    <div className="space-y-1">
+                      <h4 className={`${textScale.h4} text-amber-950 font-bold font-serif`}>
+                        Senior Safety Reminder
+                      </h4>
+                      <p className={`${textScale.bodySmall} text-amber-900 leading-relaxed`}>
+                        {selectedExercise.safetyTip}
+                      </p>
+                      <p className="text-xs text-amber-800 font-medium pt-1">
+                        💡 Tip: Have a clear wall, countertop, or sturdy chair nearby before you begin.
+                      </p>
+                    </div>
                   </div>
+
                 </div>
 
-                {/* Start, Pause, and Reset Buttons */}
-                <div className="grid grid-cols-2 gap-4 mt-8">
-                  <button
-                    onClick={() => setIsTimerRunning(!isTimerRunning)}
-                    className={`flex items-center justify-center gap-2.5 py-4.5 px-4 rounded-xl font-bold transition-all cursor-pointer text-lg ${
-                      isTimerRunning
-                        ? 'bg-[#D97706] hover:bg-amber-600 text-white'
-                        : 'bg-white hover:bg-opacity-95 text-[#1E3A8A]'
-                    }`}
-                  >
-                    {isTimerRunning ? (
-                      <>
-                        <Pause className="w-5 h-5 fill-current" />
-                        <span>PAUSE</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-5 h-5 fill-current" />
-                        <span>START</span>
-                      </>
-                    )}
-                  </button>
+              </div>
+            </div>
+          )}
 
-                  <button
-                    onClick={() => {
-                      setIsTimerRunning(false);
-                      setTimerSecondsLeft(timerInitialSeconds);
-                    }}
-                    className="flex items-center justify-center gap-2 py-4.5 px-4 bg-transparent hover:bg-white/10 text-white font-bold rounded-xl border-2 border-white transition-all cursor-pointer text-lg"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                    <span>RESET</span>
-                  </button>
+          {/* TAB 3: WEEKLY METRICS PROGRESS TAB */}
+          {activeTab === 'progress' && (
+            <div className="space-y-6 animate-fadeIn" id="progress-tab-view">
+              
+              <div className="bg-white border-2 border-[#D3CEBE] p-6 rounded-[28px] shadow-sm space-y-6">
+                <div>
+                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>My Weekly Progress (CDC Milestones)</h3>
+                  <p className={`${textScale.bodySmall} text-[#4A473E] mt-0.5`}>
+                    This chart shows how close you are to the targets recommended by the CDC for active health.
+                  </p>
                 </div>
 
-                {/* Animated overlay congratulating complete and logging */}
-                <AnimatePresence>
-                  {showCompletionPrompt && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute inset-0 bg-[#1E3A8A]/98 rounded-[28px] flex flex-col items-center justify-center p-6 text-center text-white z-10"
-                    >
-                      <div className="space-y-4 max-w-sm">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto text-white">
-                          <Award className="w-10 h-10" />
-                        </div>
-                        
-                        <div>
-                          <h4 className={`${textScale.h2} text-white font-serif`}>Excellent Job! 🌟</h4>
-                          <p className={`${textScale.bodySmall} text-white/90 mt-1`}>
-                            You completed {Math.round(timerInitialSeconds / 60)} minutes of <strong>{selectedExercise.name}</strong>.
+                <div className="space-y-5">
+                  {/* Progress Row 1 */}
+                  <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row justify-between text-sm font-bold text-[#2D2D2D] gap-1">
+                      <span className={textScale.bodySmall}>🔵 Aerobic Activity Minutes:</span>
+                      <span className="text-[#1E3A8A] font-mono">{progress.aerobicMins} / 150 minutes</span>
+                    </div>
+                    <div className="w-full bg-[#FCFAF6] rounded-full h-7 border-2 border-[#D3CEBE] overflow-hidden p-0.5">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (progress.aerobicMins / progress.aerobicTarget) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-[#4A473E] font-medium">
+                      {progress.isAerobicMet ? '✅ Wonderful! Target unlocked for the week.' : '🏃‍♂️ Try walking or streaming light movement to build minutes.'}
+                    </p>
+                  </div>
+
+                  {/* Progress Row 2 */}
+                  <div className="space-y-2 border-t border-[#E6E2D3] pt-4">
+                    <div className="flex flex-col sm:flex-row justify-between text-sm font-bold text-[#2D2D2D] gap-1">
+                      <span className={textScale.bodySmall}>🟠 Muscle Strengthening Days:</span>
+                      <span className="text-orange-700 font-mono">{progress.strengthDays} / 2 days</span>
+                    </div>
+                    <div className="w-full bg-[#FCFAF6] rounded-full h-7 border-2 border-[#D3CEBE] overflow-hidden p-0.5">
+                      <div
+                        className="bg-orange-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (progress.strengthDays / progress.strengthTarget) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-[#4A473E] font-medium">
+                      {progress.isStrengthMet ? '✅ Great work! Muscles stay robust.' : '💪 Chair stands and wall pushups help satisfy this constraint.'}
+                    </p>
+                  </div>
+
+                  {/* Progress Row 3 */}
+                  <div className="space-y-2 border-t border-[#E6E2D3] pt-4">
+                    <div className="flex flex-col sm:flex-row justify-between text-sm font-bold text-[#2D2D2D] gap-1">
+                      <span className={textScale.bodySmall}>🟢 Coordination & Balance Days:</span>
+                      <span className="text-emerald-700 font-mono">{progress.balanceDays} / 3 days</span>
+                    </div>
+                    <div className="w-full bg-[#FCFAF6] rounded-full h-7 border-2 border-[#D3CEBE] overflow-hidden p-0.5">
+                      <div
+                        className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (progress.balanceDays / progress.balanceTarget) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-[#4A473E] font-medium">
+                      {progress.isBalanceMet ? '✅ Excellent! Your balance coordination improves.' : '🟢 Single-leg stands or slow Tai-Chi flows count toward this goal.'}
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Workout History Logger Stream */}
+              <div className="bg-white border-2 border-[#D3CEBE] p-5 rounded-2xl shadow-sm space-y-4">
+                <h4 className={`${textScale.h3} font-serif text-[#1E3A8A]`}>📋 Logged Activity History</h4>
+                
+                {completedLogs.length === 0 ? (
+                  <p className={`${textScale.bodySmall} text-[#4A473E] py-4 italic text-center`}>
+                    No logs saved for this week yet. Clear some items off your daily checklist!
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {completedLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-center justify-between p-3.5 bg-[#FCFAF6] border border-[#D3CEBE] rounded-xl text-[#2D2D2D] text-sm"
+                      >
+                        <div className="space-y-0.5">
+                          <p className="font-bold text-base">{log.name}</p>
+                          <p className="text-xs text-[#4A473E] font-semibold">
+                            ⏱️ {log.minutes} mins • {log.dateString} at {log.timestamp}
                           </p>
                         </div>
 
                         <button
-                          onClick={() => {
-                            setShowCompletionPrompt(false);
-                            handleLogActivity(selectedExercise.name, Math.round(timerInitialSeconds / 60), selectedExercise.category);
-                            setTimerSecondsLeft(timerInitialSeconds);
-                          }}
-                          className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-95 text-base"
-                          style={{ minHeight: '52px' }}
+                          onClick={() => handleRemoveLog(log.id)}
+                          className={`p-2.5 text-red-700 hover:bg-red-50 rounded-lg cursor-pointer border border-transparent hover:border-red-200 transition-all ${accessibleFocus}`}
+                          title="Delete this workout instance"
                         >
-                          ✅ Yes, Save to My Log
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setShowCompletionPrompt(false);
-                            setTimerSecondsLeft(timerInitialSeconds);
-                          }}
-                          className="w-full py-2 bg-transparent hover:bg-white/10 text-white border border-white/30 rounded-xl cursor-pointer font-medium text-sm"
-                          style={{ minHeight: '40px' }}
-                        >
-                          Skip Logging
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
+                    ))}
+                  </div>
+                )}
               </div>
 
-            </div>
-          )}
-
-          {/* TAB 3: WEEKLY METRICS PROGRESS & LOG HISTORY */}
-          {activeTab === 'progress' && (
-            <div className="space-y-6" id="progress-tab-view">
-              
-              {/* Educational guidelines target */}
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 shadow-sm">
-                <div className="space-y-1 pb-3 border-b border-[#E6E2D3] mb-4">
-                  <span className={`${textScale.small} bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold text-xs uppercase px-2 py-0.5 rounded-md`}>Official CDC Guidelines</span>
-                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>My CDC Weekly Target Completion</h3>
-                </div>
-
-                <p className={`${textScale.bodySmall} text-[#5A5A40] mb-6 leading-relaxed`}>
-                  Health authorities recommend achieving 150 minutes of aerobic, 2 strength sessions, and 3 balance sessions weekly to preserve bone support, core strength, and lower slip hazards.
+              {/* Student Touch: Isolate data deletion into a remote bottom block to mitigate tremor accidents */}
+              <div className="mt-12 bg-[#FFF1F2] border-2 border-red-300 p-6 rounded-2xl space-y-3">
+                <h4 className={`${textScale.h4} text-red-950 font-serif font-bold`}>⚙️ App Management Options</h4>
+                <p className={`${textScale.small} text-red-900 leading-relaxed`}>
+                  Need to wipe the profile clean or switch to a new calendar week? Use the safety button below.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Progress 1: Aerobic */}
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black ${textScale.small} border border-[#1E3A8A]/20`}>
-                      {Math.min(100, Math.round((progress.aerobicMins / progress.aerobicTarget) * 100))}%
-                    </div>
-                    <div>
-                      <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Aerobic Minutes</span>
-                      <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.aerobicMins} / 150m</span>
-                      {progress.isAerobicMet ? (
-                        <span className={`block ${textScale.small} text-emerald-700 font-bold mt-0.5`}>🎉 Goal Met!</span>
-                      ) : (
-                        <span className={`block ${textScale.small} text-[#7A7667] font-semibold mt-0.5`}>{150 - progress.aerobicMins}m remaining</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Progress 2: Strength */}
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black ${textScale.small} border border-[#1E3A8A]/20`}>
-                      {progress.strengthDays >= 2 ? "100%" : progress.strengthDays === 1 ? "50%" : "0%"}
-                    </div>
-                    <div>
-                      <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Strength Days</span>
-                      <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.strengthDays} / 2 days</span>
-                      {progress.isStrengthMet ? (
-                        <span className={`block ${textScale.small} text-emerald-700 font-bold mt-0.5`}>🎉 Goal Met!</span>
-                      ) : (
-                        <span className={`block ${textScale.small} text-[#7A7667] font-semibold mt-0.5`}>{2 - progress.strengthDays} days left</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Progress 3: Balance */}
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black ${textScale.small} border border-[#1E3A8A]/20`}>
-                      {progress.balanceDays >= 3 ? "100%" : Math.round((progress.balanceDays / 3) * 100)}%
-                    </div>
-                    <div>
-                      <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Balance Days</span>
-                      <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.balanceDays} / 3 days</span>
-                      {progress.isBalanceMet ? (
-                        <span className={`block ${textScale.small} text-emerald-700 font-bold mt-0.5`}>🎉 Goal Met!</span>
-                      ) : (
-                        <span className={`block ${textScale.small} text-[#7A7667] font-semibold mt-0.5`}>{3 - progress.balanceDays} days left</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Workout completed logs row */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
-                {/* Completed logs feed (7 cols) */}
-                <div className="lg:col-span-7 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 space-y-4 shadow-sm" id="completed-logs-panel">
-                  <div className="flex justify-between items-center border-b border-[#E6E2D3] pb-3 mb-2">
-                    <h3 className={`${textScale.h3} text-[#1E3A8A] flex items-center gap-2 font-serif`}>
-                      <Award className="w-5 h-5 text-[#1E3A8A]" />
-                      <span>Completed Workouts Feed</span>
-                    </h3>
-                    <span className="bg-[#FCFAF6] border border-[#D3CEBE] text-[#5A5A40] text-xs font-bold py-1 px-3 rounded-full">
-                      {completedLogs.length} Logged Workouts
-                    </span>
-                  </div>
-
-                  {completedLogs.length === 0 ? (
-                    <div className="text-center py-12 text-[#7A7667] bg-[#FCFAF6] rounded-2xl border-2 border-dashed border-[#D3CEBE]">
-                      <p className={textScale.body}>No workouts logged yet for this week.</p>
-                      <p className={`${textScale.small} text-[#7A7667] mt-1`}>
-                        Use the Checklist or Interactive Timer to start completing items!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1" id="completed-logs-scrollbox">
-                      {completedLogs.map((log) => {
-                        const dateObj = weekDays.find(d => d.dateString === log.dateString);
-                        const dayLabel = dateObj ? dateObj.dayName : "Other Date";
-
-                        return (
-                          <div
-                            key={log.id}
-                            className="flex items-center justify-between p-3.5 bg-[#FCFAF6]/70 hover:bg-[#FCFAF6] border-2 border-[#E6E2D3] rounded-xl transition-all"
-                          >
-                            <div className="min-w-0 pr-4">
-                              <h4 className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>{log.name}</h4>
-                              <p className={`${textScale.small} text-[#7A7667] font-semibold mt-0.5`}>
-                                {dayLabel} • {log.minutes} mins • {log.timestamp}
-                              </p>
-                            </div>
-
-                            <button
-                              onClick={() => handleRemoveLog(log.id)}
-                              className="p-3 text-[#7A7667] hover:text-rose-700 bg-white hover:bg-rose-50 border border-[#D3CEBE] hover:border-rose-200 rounded-lg cursor-pointer transition-all"
-                              title="Delete this log record"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="pt-2">
-                    <button
-                      onClick={handleResetAllData}
-                      className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 cursor-pointer text-xs"
-                    >
-                      Clear Log & Start Fresh Week
-                    </button>
-                  </div>
-                </div>
-
-                {/* Local Info guidelines callout card (5 cols) */}
-                <div className="lg:col-span-5 bg-[#FCFAF6] border-2 border-[#D3CEBE] rounded-[28px] p-5 md:p-6 space-y-4 shadow-sm">
-                  <div className="w-12 h-12 bg-[#1E3A8A]/10 text-[#1E3A8A] rounded-xl flex items-center justify-center border border-[#1E3A8A]/20">
-                    <Info className="w-6 h-6" />
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Official Guidelines</h3>
-                    <p className={`${textScale.bodySmall} text-[#2D2D2D] leading-relaxed`}>
-                      The <strong>US Centers for Disease Control (CDC)</strong> recommends older adults do a mixture of:
-                    </p>
-                    <ul className="space-y-2.5 text-sm">
-                      <li className="flex gap-2.5">
-                        <span className="text-[#1E3A8A]">🏃</span>
-                        <p className={`${textScale.small} text-[#5A5A40]`}>
-                          <strong>Moderate Aerobic</strong> (Brisk walking, slow swim) at least 150 minutes total.
-                        </p>
-                      </li>
-                      <li className="flex gap-2.5">
-                        <span className="text-[#1E3A8A]">💪</span>
-                        <p className={`${textScale.small} text-[#5A5A40]`}>
-                          <strong>Strength training</strong> (sit-to-stands, arm curls) 2 or more days a week.
-                        </p>
-                      </li>
-                      <li className="flex gap-2.5">
-                        <span className="text-[#1E3A8A]">⚖️</span>
-                        <p className={`${textScale.small} text-[#5A5A40]`}>
-                          <strong>Balance training</strong> (single leg posture steps) 3 days a week to prevent slips.
-                        </p>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
+                <button
+                  onClick={handleResetAllData}
+                  className={`bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-sm text-sm cursor-pointer ${accessibleFocus}`}
+                  style={{ minHeight: '48px' }}
+                >
+                  🗑 Clear My Activity History
+                </button>
               </div>
 
             </div>
           )}
 
         </main>
-
       </div>
 
-      {/* PROFESSIONAL FOOTER */}
-      <footer className="text-center py-8 text-[#7A7667] border-t-2 border-[#E6E2D3]/60 max-w-7xl w-full mx-auto mt-12 bg-white rounded-t-3xl p-4 border-l-2 border-r-2 border-[#D3CEBE]">
-        <p className={`${textScale.bodySmall} font-serif font-semibold text-[#1E3A8A]`}>
-          Senior Fitness Scheduler & Tracker
-        </p>
-        <p className={`${textScale.small} font-medium text-[#7A7667] mt-1`}>
-          Healthy Aging Guidelines Portal
-        </p>
-        <p className="text-[10px] text-[#7A7667]/75 tracking-wider mt-0.5">
-          Designed specifically for older adults with highly visible layouts and clear text controls.
-        </p>
-      </footer>
+      {/* MODAL WINDOW OVERLAY 1: TIMER COMPLETED WORKOUT CONGRATS */}
+      <AnimatePresence>
+        {showCompletionPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              className="bg-white border-4 border-emerald-500 rounded-[36px] max-w-md w-full p-6 md:p-8 space-y-5 text-center shadow-xl"
+            >
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-300">
+                <Award className="w-9 h-9" />
+              </div>
 
-      {/* MODAL: Log Custom Scheduled Activity dialog */}
+              <div className="space-y-2">
+                <h2 className={`${textScale.h2} text-emerald-950 font-serif`}>Great Job, Star!</h2>
+                <p className={`${textScale.body} text-[#4A473E]`}>
+                  You successfully finished the full session for <strong>{selectedExercise.name}</strong>!
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    handleLogActivity(selectedExercise.name, Math.floor(timerInitialSeconds / 60), selectedExercise.category);
+                    setShowCompletionPrompt(false);
+                    setActiveTab('progress');
+                  }}
+                  className={`w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-sm cursor-pointer transition-all ${accessibleFocus}`}
+                  style={{ minHeight: '54px' }}
+                >
+                  💾 Save to Workout History
+                </button>
+
+                <button
+                  onClick={() => setShowCompletionPrompt(false)}
+                  className={`w-full py-3 bg-white text-[#4A473E] font-bold text-sm rounded-xl border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] cursor-pointer transition-all ${accessibleFocus}`}
+                  style={{ minHeight: '46px' }}
+                >
+                  Close & Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL WINDOW OVERLAY 2: ADD MANUALLY ADDED CUSTOM EVENT */}
       <AnimatePresence>
         {showCustomLogModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="custom-schedule-modal">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[32px] border-2 border-[#D3CEBE] p-6 md:p-8 max-w-lg w-full shadow-2xl relative text-[#2D2D2D]"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white border-2 border-[#D3CEBE] rounded-[28px] max-w-md w-full p-6 space-y-5 shadow-2xl relative"
             >
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Add Scheduled Activity</h3>
-                  <p className={`${textScale.small} text-[#7A7667] mt-1 font-medium`}>
-                    Choose an exercise to practice on <strong>{selectedDayInfo.dayName}</strong>.
-                  </p>
-                </div>
+              <div className="flex justify-between items-center border-b border-[#E6E2D3] pb-3">
+                <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Add Exercise to Schedule</h3>
                 <button
                   onClick={() => setShowCustomLogModal(false)}
-                  className="p-2 hover:bg-[#FCFAF6] rounded-xl text-gray-500 hover:text-[#1E3A8A] font-bold text-lg cursor-pointer"
+                  className="text-2xl font-bold p-1 text-[#4A473E] hover:text-[#2D2D2D]"
+                  aria-label="Close form"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleAddCustomScheduleItem} className="space-y-6">
+              <form onSubmit={handleAddCustomScheduleItem} className="space-y-4">
                 
-                {/* Exercise Selection Cards */}
-                <div className="space-y-2">
-                  <label className={`${textScale.small} block font-bold uppercase tracking-wider text-[#1E3A8A]`}>
-                    Select Activity Type:
+                {/* Selector Target */}
+                <div className="space-y-1.5">
+                  <label htmlFor="modal-exercise-select" className={`${textScale.small} text-[#4A473E] font-bold block`}>
+                    1. Select Exercise Movement Type:
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto p-2 border-2 border-[#E6E2D3] rounded-2xl bg-[#FCFAF6]">
-                    {EXERCISES_DB.map((ex) => (
-                      <button
-                        type="button"
-                        key={ex.id}
-                        onClick={() => setCustomLogExerciseId(ex.id)}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                          customLogExerciseId === ex.id
-                            ? 'bg-white border-[#1E3A8A] ring-2 ring-[#1E3A8A]/20 font-bold'
-                            : 'bg-white border-[#D3CEBE] hover:bg-[#F5F2EB]'
-                        }`}
-                      >
-                        <span className={`${textScale.small} font-bold text-[#2D2D2D]`}>{ex.name}</span>
-                        <span className="text-[10px] uppercase font-bold text-[#7A7667] mt-1">{ex.category}</span>
-                      </button>
+                  <select
+                    id="modal-exercise-select"
+                    value={customLogExerciseId}
+                    onChange={(e) => setCustomLogExerciseId(e.target.value)}
+                    className="w-full p-3 bg-white border-2 border-[#D3CEBE] rounded-xl font-bold text-base text-[#2D2D2D] focus:border-[#1E3A8A] focus:outline-none"
+                    style={{ minHeight: '48px' }}
+                  >
+                    {EXERCISES_DB.map(e => (
+                      <option key={e.id} value={e.id}>
+                        {e.name} ({e.category})
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
 
-                {/* Duration Inputs */}
-                <div className="space-y-2">
-                  <label className={`${textScale.small} block font-bold uppercase tracking-wider text-[#1E3A8A]`}>
-                    Target Duration (Minutes):
+                {/* Minute inputs explicitly optimized for tremors with flanking additions */}
+                <div className="space-y-1.5">
+                  <label htmlFor="modal-minutes-input" className={`${textScale.small} text-[#4A473E] font-bold block`}>
+                    2. Target Minutes to Perform:
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setCustomLogMinutes(prev => Math.max(1, prev - 5))}
-                      className="p-3 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-lg cursor-pointer w-14 text-center shadow-xs"
+                      className={`p-3 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-lg cursor-pointer w-14 text-center shadow-xs ${accessibleFocus}`}
                     >
                       -5
                     </button>
-                    
+
                     <input
+                      id="modal-minutes-input"
                       type="number"
                       required
                       min={1}
                       max={180}
                       value={customLogMinutes}
                       onChange={(e) => setCustomLogMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="flex-1 py-3 px-4 rounded-xl border-2 border-[#D3CEBE] text-center font-bold text-xl text-[#2D2D2D] bg-white focus:outline-none focus:border-[#1E3A8A]"
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 border-[#D3CEBE] text-center font-bold text-xl text-[#2D2D2D] bg-white focus:outline-none focus:border-[#1E3A8A] ${accessibleFocus}`}
                     />
 
                     <button
                       type="button"
                       onClick={() => setCustomLogMinutes(prev => Math.min(180, prev + 5))}
-                      className="p-3 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-lg cursor-pointer w-14 text-center shadow-xs"
+                      className={`p-3 bg-white border-2 border-[#D3CEBE] hover:bg-[#FCFAF6] rounded-xl text-[#2D2D2D] font-bold text-lg cursor-pointer w-14 text-center shadow-xs ${accessibleFocus}`}
                     >
                       +5
                     </button>
                   </div>
                 </div>
 
-                {/* Confirm Action Button */}
                 <button
                   type="submit"
-                  className="w-full py-4 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold text-lg rounded-2xl transition-all cursor-pointer shadow-md"
+                  className={`w-full py-4 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold text-lg rounded-2xl transition-all cursor-pointer shadow-md ${accessibleFocus}`}
                   style={{ minHeight: '56px' }}
                 >
                   💾 Save to Day&apos;s Schedule
