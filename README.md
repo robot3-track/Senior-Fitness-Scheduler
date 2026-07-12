@@ -1,6 +1,6 @@
 # Senior Fitness and Activity Tracker
 
-A web-based physical activity scheduler and tracker designed for older adults. This application is aligned with the Centers for Disease Control and Prevention (CDC) physical activity guidelines for older adults, tracking aerobic exercise minutes, muscle-strengthening sessions, and balance-training days.
+A web-based (but can be built as mobile app too!) physical activity scheduler and tracker designed for older adults. This application is aligned with the Centers for Disease Control and Prevention (CDC) physical activity guidelines for older adults, tracking aerobic exercise minutes, muscle-strengthening sessions, and balance-training days. This app also follows and supports two of the UN Sustainbility Goals.
 
 ## Accessibility Features
 
@@ -27,11 +27,17 @@ The user interface incorporates specific design choices to accommodate seniors a
 *   **Local State Persistence**:
     *   Saves schedule, logging history, and accessibility preferences to the browser's localStorage.
 
+## UN Sustainable Goals Alignments
+
+*  **UN Goal #3**: Ensure healthy lives and promote well-being for all at all ages. The UN explicitly emphasizes that "at all ages" includes our rapidly growing global aging population, which shows the purpose of the app is for promoting healthy lives for the aging population. With CDC guidelines (150 minutes of aerobic activity, plus strength and balance training), the app directly combats age-related non-communicable conditions like cardiovascular disease, type 2 diabetes, and osteoporosis. This aligns with Target 3.4.
+
+*  **UN Goal #10**: Reduce inequality within and among countries. This app promotes social and digital inclusion regardless of age or disability. A common problem seen is that older adults are frequently left behind by the modern "digital health" revolution because apps are often built with tiny fonts, low contrast, complex navigation, and assumptions about high digital literacy. However, since this app has BIG Text Toggle, high-contrast borders, tremor-safe step-trackers, and slow-cadence Text-to-Speech, this app ensures that health-tech is accessible to individuals with visual impairments, motor-control friction, or cognitive decline. This aligns with Target 10.2.
+
 ## Tech Stack
 
 *   **Framework**: Next.js 15+ (App Router) with TypeScript
 *   **Styling**: Tailwind CSS
-*   **Animations**: Motion (motion/react) for transitional effects
+*   **Animations**: Motion (motion/react) for simple yet impactful transitional effects
 *   **Icons**: Lucide React
 
 ## Local Development and Deployment
@@ -50,24 +56,10 @@ To run the application locally:
 
 To deploy the application to Vercel or other cloud providers, import the repository and trigger the standard Next.js build.
 
-## Mobile Application Compilation
+Key point: For app to run smoothly, be sure to add your own GEMINI_API_KEY under .env file or Vercel deployment.
 
-This project is configured for Capacitor, enabling compilation to native Android.
+This app also can be built as a mobile application.
 
-1. Build the static Next.js assets:
-   ```bash
-   npm run build
-   ```
-2. Initialize and configure Android support:
-   ```bash
-   npm install @capacitor/core @capacitor/cli
-   npx cap init "Senior Fitness Tracker" "com.seniorfitness.app" --web-dir=out
-   npm install @capacitor/android
-   npx cap add android
-   ```
-3. Synchronize assets and open in Android Studio:
-   ```bash
-   npx cap sync
-   npx cap open android
-   ```
-   From Android Studio, compile the project to generate a native APK.
+# Try it now!
+
+Try out the official deployed project here at: https://senior-fitness-scheduler.vercel.app/ !
