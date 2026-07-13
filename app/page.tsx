@@ -54,7 +54,7 @@ interface CompletedLog {
   timestamp: string;
 }
 
-// 1. Static exercise database aligned with official CDC older adults physical activity guidelines
+// Static exercise database aligned with official CDC older adults physical activity guidelines
 const EXERCISES_DB: Exercise[] = [
   {
     id: 'brisk-walk',
@@ -283,10 +283,8 @@ export default function SeniorFitnessDashboard() {
     return todayObj ? todayObj.dateString : dates[0].dateString;
   });
 
-  // RESTORED: Explicit exercise categorization selector category view state
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'all' | 'aerobic' | 'strength' | 'balance' | 'stretch'>('all');
   
-  // RESTORED: Custom standalone logger form wizard states
   const [manualWorkoutName, setManualWorkoutName] = useState('');
   const [manualWorkoutDuration, setManualWorkoutDuration] = useState<number>(15);
   const [manualWorkoutCategory, setManualWorkoutCategory] = useState<'aerobic' | 'strength' | 'balance' | 'stretch'>('aerobic');
@@ -483,7 +481,6 @@ export default function SeniorFitnessDashboard() {
       allActivities.push({ ...c, completed: isCompleted });
     });
 
-    // RESTORED: Filter by selection profile category
     if (selectedCategoryFilter !== 'all') {
       return allActivities.filter(a => a.category === selectedCategoryFilter);
     }
@@ -509,7 +506,6 @@ export default function SeniorFitnessDashboard() {
     }
   };
 
-  // RESTORED: Handle submission of arbitrary manual workflow log entries
   const handleManualQuickLogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualWorkoutName.trim()) return;
@@ -637,11 +633,11 @@ export default function SeniorFitnessDashboard() {
 
   if (!mounted) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FCFAF6] text-[#2C2925]">
-        <div className="text-center p-8 bg-white rounded-[32px] border-2 border-[#D3CEBE] max-w-sm shadow-[6px_6px_0px_0px_rgba(90,90,64,0.15)]">
+      <div className="flex items-center justify-center min-h-screen bg-[#F7F5F0] text-[#2C2925]">
+        <div className="text-center p-8 bg-white rounded-xl border border-[#D3CEBE] max-w-sm shadow-sm">
           <Heart className="w-16 h-16 text-[#1E3A8A] animate-pulse mx-auto mb-4" />
           <h2 className="text-2xl font-serif font-bold text-[#1E3A8A]">Opening your Fitness Companion...</h2>
-          <p className="text-[#5A5A40] mt-2 font-medium">Loading calendar, guidelines, and large buttons.</p>
+          <p className="text-[#5A5A40] mt-2 font-medium">Loading calendar, guidelines, and clean buttons.</p>
         </div>
       </div>
     );
@@ -665,10 +661,10 @@ export default function SeniorFitnessDashboard() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#FCFAF6] flex flex-col justify-between p-4 md:p-8 text-[#2D2D2D]" id="login-screen-root">
-        <div className="max-w-2xl w-full mx-auto my-auto space-y-8 bg-white rounded-[32px] border-2 border-[#D3CEBE] p-6 md:p-10 shadow-[8px_8px_0px_0px_rgba(90,90,64,0.15)]">
+      <div className="min-h-screen bg-[#F7F5F0] flex flex-col justify-between p-4 md:p-8 text-[#2D2D2D]" id="login-screen-root">
+        <div className="max-w-2xl w-full mx-auto my-auto space-y-8 bg-white rounded-xl border border-[#D3CEBE] p-6 md:p-10 shadow-sm">
           <div className="text-center space-y-4">
-            <div className="inline-flex p-3.5 bg-[#1E3A8A]/10 text-[#1E3A8A] rounded-full">
+            <div className="inline-flex p-3.5 bg-[#1E3A8A]/5 text-[#1E3A8A] rounded-full">
               <Heart className="w-10 h-10 fill-current" />
             </div>
             <h1 className={`${textScale.title} text-[#1E3A8A] leading-tight`}>Senior Fitness Scheduler</h1>
@@ -677,7 +673,7 @@ export default function SeniorFitnessDashboard() {
             </p>
           </div>
 
-          <form onSubmit={(e) => handleSignIn(e)} className="space-y-6 bg-[#FCFAF6] p-6 rounded-2xl border-2 border-[#E6E2D3] max-w-md mx-auto" id="email-signin-form">
+          <form onSubmit={(e) => handleSignIn(e)} className="space-y-6 bg-[#FAFAFA] p-6 rounded-lg border border-[#E6E2D3] max-w-md mx-auto" id="email-signin-form">
             <div className="space-y-2">
               <label htmlFor="user-email-input" className={`${textScale.label} block text-[#5A5A40]`}>Enter your Email to sign in:</label>
               <input
@@ -687,7 +683,7 @@ export default function SeniorFitnessDashboard() {
                 placeholder="example@email.com"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                className={`w-full py-3.5 px-4 rounded-xl border-2 border-[#D3CEBE] focus:border-[#1E3A8A] focus:outline-none bg-white text-[#2D2D2D] font-medium ${textScale.body}`}
+                className={`w-full py-3.5 px-4 rounded-lg border border-[#D3CEBE] focus:border-[#1E3A8A] focus:outline-none bg-white text-[#2D2D2D] font-medium ${textScale.body}`}
               />
               <p className={`${textScale.small} text-[#7A7667] leading-relaxed`}>
                 No password required! We use your email to safely separate your exercise checklist and history so multiple family members can use this device.
@@ -695,12 +691,12 @@ export default function SeniorFitnessDashboard() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button type="submit" className={`flex-1 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold rounded-xl shadow-sm cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`} style={{ minHeight: '52px' }}>Sign In</button>
-              <button type="button" onClick={() => handleSignIn(undefined, 'guest@seniorfitness.org')} className={`bg-white border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#2D2D2D] font-bold rounded-xl cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`} style={{ minHeight: '52px' }}>Enter as Guest</button>
+              <button type="submit" className={`flex-1 bg-[#1E3A8A] hover:bg-[#1A3073] text-white font-bold rounded-lg shadow-sm cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`} style={{ minHeight: '52px' }}>Sign In</button>
+              <button type="button" onClick={() => handleSignIn(undefined, 'guest@seniorfitness.org')} className={`bg-white border border-[#D3CEBE] hover:bg-[#FAFAFA] text-[#2D2D2D] font-bold rounded-lg cursor-pointer transition-all active:scale-95 text-center ${textScale.btn}`} style={{ minHeight: '52px' }}>Enter as Guest</button>
             </div>
           </form>
 
-          <div className="bg-[#FAF7EE] p-5 rounded-2xl border border-[#E6E2D3] flex gap-4 items-start max-w-md mx-auto">
+          <div className="bg-[#FAFAFA] p-5 rounded-lg border border-[#E6E2D3] flex gap-4 items-start max-w-md mx-auto">
             <Info className="w-5 h-5 text-[#5A5A40] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h4 className={`${textScale.small} font-bold text-[#5A5A40]`}>Official Healthy Aging Target:</h4>
@@ -716,14 +712,14 @@ export default function SeniorFitnessDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCFAF6] p-3 md:p-6 text-[#2D2D2D] flex flex-col justify-between" id="app-root-container">
+    <div className="min-h-screen bg-[#F7F5F0] p-3 md:p-6 text-[#2D2D2D] flex flex-col justify-between" id="app-root-container">
       <div className="max-w-7xl mx-auto w-full space-y-6">
         
         {/* Header section */}
-        <header className="bg-white rounded-[24px] p-4 md:p-6 border-2 border-[#D3CEBE] shadow-[4px_4px_0px_0px_rgba(90,90,64,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4" id="app-main-header">
+        <header className="bg-white rounded-xl p-4 md:p-6 border border-[#D3CEBE] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4" id="app-main-header">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold text-xs uppercase px-2.5 py-1 rounded-full">CDC Standard Exercises</span>
+              <span className="bg-[#1E3A8A]/5 text-[#1E3A8A] font-bold text-xs uppercase px-2.5 py-1 rounded-md">CDC Standard Exercises</span>
               <span className="text-[#7A7667]">•</span>
               <span className="text-xs text-[#7A7667] font-semibold flex items-center gap-1">
                 <UserCheck className="w-3 h-3 text-[#5A5A40]" /> Profile: <strong className="text-[#1E3A8A]">{userEmail}</strong>
@@ -735,7 +731,7 @@ export default function SeniorFitnessDashboard() {
           <div className="flex flex-wrap gap-2.5 w-full md:w-auto" id="header-controls">
             <button
               onClick={() => setLargerText(!largerText)}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 transition-all font-bold cursor-pointer ${largerText ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white hover:bg-[#1A3073]' : 'bg-[#F9F8F4] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'}`}
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border transition-all font-bold cursor-pointer ${largerText ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white hover:bg-[#1A3073]' : 'bg-[#FAFAFA] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F2EDE0]'}`}
               style={{ minHeight: '48px' }}
               id="text-size-toggle-btn"
             >
@@ -743,7 +739,7 @@ export default function SeniorFitnessDashboard() {
               <span className={textScale.btnSmall}>{largerText ? '🔠 Regular Text' : '🔠 Make Text BIGGER'}</span>
             </button>
 
-            <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#F9F8F4] text-[#7A7667] border-2 border-[#D3CEBE] rounded-xl font-bold transition-all cursor-pointer" style={{ minHeight: '48px' }}>
+            <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-[#FAFAFA] text-[#7A7667] border border-[#D3CEBE] rounded-lg font-bold transition-all cursor-pointer" style={{ minHeight: '48px' }}>
               <LogOut className="w-4 h-4 shrink-0" />
               <span className={textScale.btnSmall}>Switch User</span>
             </button>
@@ -751,12 +747,12 @@ export default function SeniorFitnessDashboard() {
         </header>
 
         {/* NAVIGATION TABS */}
-        <div className="grid grid-cols-2 md:flex md:flex-row gap-2.5 w-full bg-white p-2.5 rounded-[24px] border-2 border-[#D3CEBE] shadow-[4px_4px_0px_0px_rgba(90,90,64,0.15)]" id="navigation-tabs-bar">
+        <div className="grid grid-cols-2 md:flex md:flex-row gap-2.5 w-full bg-white p-2 rounded-xl border border-[#D3CEBE] shadow-sm" id="navigation-tabs-bar">
           {(['welcome', 'checklist', 'timer', 'progress'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center justify-center gap-2 rounded-xl cursor-pointer transition-all border-2 py-2.5 px-3.5 ${textScale.tab} ${activeTab === tab ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold' : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#FCFAF6] hover:border-[#E6E2D3] font-medium'}`}
+              className={`flex items-center justify-center gap-2 rounded-lg cursor-pointer transition-all border py-2.5 px-3.5 ${textScale.tab} ${activeTab === tab ? 'bg-[#1E3A8A] border-[#1E3A8A] text-white shadow-xs font-bold' : 'bg-transparent border-transparent text-[#1E3A8A] hover:bg-[#F7F5F0] hover:border-[#E6E2D3] font-medium'}`}
             >
               {tab === 'welcome' && <Heart className="w-4 h-4 shrink-0" />}
               {tab === 'checklist' && <CalendarIcon className="w-4 h-4 shrink-0" />}
@@ -773,7 +769,7 @@ export default function SeniorFitnessDashboard() {
           {/* TAB 0: WELCOME HUB */}
           {activeTab === 'welcome' && (
             <div className="space-y-6 animate-fadeIn" id="welcome-tab-view">
-              <div className="bg-gradient-to-r from-[#1E3A8A] to-[#1E40AF] text-white rounded-[32px] p-6 md:p-8 border-2 border-[#1E3A8A] shadow-[6px_6px_0px_0px_rgba(30,58,138,0.2)]">
+              <div className="bg-[#1E3A8A] text-white rounded-xl p-6 md:p-8 border border-[#1E3A8A] shadow-sm">
                 <div className="max-w-3xl space-y-3">
                   <h2 className={`${textScale.title} font-serif text-white`}>Welcome back! Let&apos;s Stay Active & Balanced.</h2>
                   <div className="pt-2 flex flex-wrap items-center gap-4">
@@ -785,10 +781,10 @@ export default function SeniorFitnessDashboard() {
 
               {/* Quick Summary Widgets */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
+                <div className="bg-white p-5 rounded-xl border border-[#D3CEBE] space-y-2">
                   <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>Today&apos;s Workout</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-[#1E3A8A] rounded-xl border border-blue-100"><CalendarIcon className="w-5 h-5" /></div>
+                    <div className="p-2.5 bg-blue-50 text-[#1E3A8A] rounded-lg border border-blue-100"><CalendarIcon className="w-5 h-5" /></div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>{dailyActivitiesList.length} scheduled</p>
                       <p className="text-xs text-[#7A7667]">{dailyActivitiesList.filter(a => a.completed).length} completed today</p>
@@ -796,10 +792,10 @@ export default function SeniorFitnessDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
+                <div className="bg-white p-5 rounded-xl border border-[#D3CEBE] space-y-2">
                   <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>My Active Timer</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl border border-amber-100"><TimerIcon className="w-5 h-5" /></div>
+                    <div className="p-2.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-100"><TimerIcon className="w-5 h-5" /></div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>{selectedExercise.name}</p>
                       <p className="text-xs text-[#7A7667]">Ready to start ({selectedExercise.minutes} mins)</p>
@@ -807,40 +803,40 @@ export default function SeniorFitnessDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border-2 border-[#D3CEBE] space-y-2">
+                <div className="bg-white p-5 rounded-xl border border-[#D3CEBE] space-y-2">
                   <span className={`${textScale.small} text-[#7A7667] font-bold uppercase`}>Weekly Goal Progress</span>
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100"><Award className="w-5 h-5" /></div>
+                    <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100"><Award className="w-5 h-5" /></div>
                     <div>
                       <p className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>{progress.aerobicMins} / 150m Aerobic</p>
-                      <p className="text-xs text-[#7A7667]">{progress.strengthDays}/2 Strength • {progress.balanceDays}/3 Balance</p>
+                      <p className="text-xs text-[#7A7667]">| {progress.strengthDays}/2 Strength • {progress.balanceDays}/3 Balance</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Navigation Cards */}
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-6 space-y-5 shadow-sm">
+              <div className="bg-white rounded-xl border border-[#D3CEBE] p-6 space-y-5 shadow-sm">
                 <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Where would you like to go today?</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button onClick={() => setActiveTab('checklist')} className="group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block"><CalendarIcon className="w-6 h-6" /></div>
+                  <button onClick={() => setActiveTab('checklist')} className="group text-left p-5 bg-[#FAFAFA] hover:bg-[#F2EDE0] border border-[#D3CEBE] rounded-lg cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
+                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-md text-[#1E3A8A] inline-block"><CalendarIcon className="w-6 h-6" /></div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline`}>My Checklist &rarr;</h4>
                       <p className={`${textScale.small} text-[#5A5A40] mt-1`}>Select a day, view exercises, and tick off items.</p>
                     </div>
                   </button>
 
-                  <button onClick={() => setActiveTab('timer')} className="group text-left p-5 bg-[#FCFAF6] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block"><TimerIcon className="w-6 h-6" /></div>
+                  <button onClick={() => setActiveTab('timer')} className="group text-left p-5 bg-[#FAFAFA] hover:bg-[#F2EDE0] border border-[#D3CEBE] rounded-lg cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
+                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-md text-[#1E3A8A] inline-block"><TimerIcon className="w-6 h-6" /></div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline`}>Active Timer &rarr;</h4>
                       <p className={`${textScale.small} text-[#5A5A40] mt-1`}>Follow exercises with big, visible countdown clocks.</p>
                     </div>
                   </button>
 
-                  <button onClick={() => setActiveTab('progress')} className="group text-left p-5 bg-[#FAF7EE] hover:bg-[#F2EDE0] border-2 border-[#D3CEBE] rounded-2xl cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
-                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-xl text-[#1E3A8A] inline-block"><Award className="w-6 h-6" /></div>
+                  <button onClick={() => setActiveTab('progress')} className="group text-left p-5 bg-[#FAFAFA] hover:bg-[#F2EDE0] border border-[#D3CEBE] rounded-lg cursor-pointer transition-all flex flex-col justify-between space-y-4" style={{ minHeight: '160px' }}>
+                    <div className="p-3 bg-white border border-[#D3CEBE] rounded-md text-[#1E3A8A] inline-block"><Award className="w-6 h-6" /></div>
                     <div>
                       <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif group-hover:underline`}>CDC Progress &rarr;</h4>
                       <p className={`${textScale.small} text-[#5A5A40] mt-1`}>Track your weekly targets against official healthy guidelines.</p>
@@ -850,20 +846,20 @@ export default function SeniorFitnessDashboard() {
               </div>
 
               {/* Safety guidelines banner */}
-              <div className="w-full bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 space-y-4 shadow-sm flex flex-col justify-between">
+              <div className="w-full bg-white rounded-xl border border-[#D3CEBE] p-5 space-y-4 shadow-sm flex flex-col justify-between">
                 <div className="space-y-3">
                   <span className="text-[#1E3A8A] font-bold text-xs uppercase tracking-wider bg-blue-50 py-1 px-2.5 rounded-md border border-blue-100 inline-block">🛡️ Safe Exercise Protocols</span>
                   <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Essential Safe-Aging Principles</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[#2D2D2D] pt-2">
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
+                    <li className="bg-[#FAFAFA] p-4 rounded-lg border border-[#E6E2D3] flex gap-2.5 items-start">
                       <span className="text-xl shrink-0">🛋️</span>
                       <p className={`${textScale.small} leading-relaxed`}><strong>Stable Support:</strong> Keep a heavy, stable chair or wall nearby for physical support during balance steps.</p>
                     </li>
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
+                    <li className="bg-[#FAFAFA] p-4 rounded-lg border border-[#E6E2D3] flex gap-2.5 items-start">
                       <span className="text-xl shrink-0">💧</span>
                       <p className={`${textScale.small} leading-relaxed`}><strong>Stay Hydrated:</strong> Keep a water glass handy and drink before, during, and after routines.</p>
                     </li>
-                    <li className="bg-[#FCFAF6] p-4 rounded-xl border border-[#E6E2D3] flex gap-2.5 items-start">
+                    <li className="bg-[#FAFAFA] p-4 rounded-lg border border-[#E6E2D3] flex gap-2.5 items-start">
                       <span className="text-xl shrink-0">🛑</span>
                       <p className={`${textScale.small} leading-relaxed`}><strong>Stop on Pain:</strong> Working out should be comfortable. Stop immediately if anything hurts.</p>
                     </li>
@@ -880,7 +876,7 @@ export default function SeniorFitnessDashboard() {
                       u.rate = 0.8; u.onend = () => setIsSpeaking(false); u.onerror = () => setIsSpeaking(false);
                       setIsSpeaking(true); window.speechSynthesis.speak(u);
                     }}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold border-2 transition-all cursor-pointer ${isSpeaking ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse' : 'bg-[#FCFAF6] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'}`}
+                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-bold border transition-all cursor-pointer ${isSpeaking ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse' : 'bg-[#FAFAFA] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F2EDE0]'}`}
                     style={{ minHeight: '48px' }}
                   >
                     {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5 text-[#1E3A8A]" />}
@@ -894,7 +890,7 @@ export default function SeniorFitnessDashboard() {
           {/* TAB 1: DAILY ROUTINE AND CHECKLIST */}
           {activeTab === 'checklist' && (
             <div className="space-y-6" id="checklist-tab-view">
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-4 md:p-6 shadow-sm">
+              <div className="bg-white rounded-xl border border-[#D3CEBE] p-4 md:p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E6E2D3]">
                   <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Weekly Calendar Row</h3>
                 </div>
@@ -906,7 +902,7 @@ export default function SeniorFitnessDashboard() {
                       <button
                         key={day.dateString}
                         onClick={() => setSelectedDate(day.dateString)}
-                        className={`flex flex-col items-center justify-center py-4 rounded-xl transition-all cursor-pointer border-2 ${isSelected ? 'bg-[#1E3A8A] text-white border-[#1E3A8A] shadow-md ring-4 ring-[#1E3A8A]/10 font-bold' : day.isToday ? 'bg-[#FAF7EE] text-[#1E3A8A] border-2 border-[#1E3A8A]' : 'bg-[#FCFAF6] hover:bg-[#F5F2EB] border-[#D3CEBE] text-[#5A5A40]'}`}
+                        className={`flex flex-col items-center justify-center py-4 rounded-lg transition-all cursor-pointer border ${isSelected ? 'bg-[#1E3A8A] text-white border-[#1E3A8A] font-bold shadow-sm' : day.isToday ? 'bg-white text-[#1E3A8A] border-2 border-[#1E3A8A]' : 'bg-[#FAFAFA] hover:bg-[#F2EDE0] border-[#D3CEBE] text-[#5A5A40]'}`}
                         style={{ minHeight: '85px' }}
                       >
                         <span className={`${textScale.small} font-bold uppercase block opacity-85`}>{day.dayName.substring(0, 3)}</span>
@@ -916,22 +912,22 @@ export default function SeniorFitnessDashboard() {
                   })}
                 </div>
 
-                <div className="bg-[#FCFAF6] p-4 rounded-xl border border-[#D3CEBE] flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
+                <div className="bg-[#FAFAFA] p-4 rounded-lg border border-[#D3CEBE] flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
                   <div>
                     <span className={`${textScale.small} uppercase font-bold text-[#7A7667]`}>Day selected:</span>
                     <p className={`${textScale.h4} text-[#1E3A8A]`}>{selectedDayInfo.dayName}, {selectedDayInfo.monthLabel} {selectedDayInfo.dayOfMonth}</p>
                   </div>
-                  <button onClick={() => setShowCustomLogModal(true)} className="flex items-center gap-1.5 py-3 px-5 bg-white border-2 border-[#D3CEBE] hover:bg-[#F5F2EB] text-[#2D2D2D] rounded-xl font-bold text-xs cursor-pointer shadow-sm">
+                  <button onClick={() => setShowCustomLogModal(true)} className="flex items-center gap-1.5 py-3 px-5 bg-white border border-[#D3CEBE] hover:bg-[#FAFAFA] text-[#2D2D2D] rounded-lg font-bold text-xs cursor-pointer shadow-xs">
                     <Plus className="w-4 h-4 text-[#1E3A8A]" /> Add Custom Activity
                   </button>
                 </div>
               </div>
 
-              {/* RESTORED: SPLIT VIEW LAYOUT WITH EXERCISE PROFILE FILTER CATEGORIES */}
+              {/* SPLIT VIEW LAYOUT WITH EXERCISE PROFILE FILTER CATEGORIES */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* Left Side Column: Filter categories selector */}
-                <div className="lg:col-span-4 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-4 md:p-5 space-y-4 shadow-sm">
+                <div className="lg:col-span-4 bg-white rounded-xl border border-[#D3CEBE] p-4 md:p-5 space-y-4 shadow-sm">
                   <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif flex items-center gap-2 border-b border-[#E6E2D3] pb-2`}>
                     <Activity className="w-5 h-5" />
                     <span>Workout Filters</span>
@@ -943,7 +939,7 @@ export default function SeniorFitnessDashboard() {
                       <button
                         key={cat}
                         onClick={() => setSelectedCategoryFilter(cat)}
-                        className={`w-full text-left py-3 px-4 rounded-xl border-2 transition-all font-bold flex items-center justify-between cursor-pointer ${selectedCategoryFilter === cat ? 'bg-[#1E3A8A] text-white border-[#1E3A8A] shadow-sm' : 'bg-[#FCFAF6] text-[#2D2D2D] border-[#D3CEBE] hover:bg-[#F5F2EB]'}`}
+                        className={`w-full text-left py-3 px-4 rounded-lg border transition-all font-bold flex items-center justify-between cursor-pointer ${selectedCategoryFilter === cat ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-[#FAFAFA] text-[#2D2D2D] border-[#D3CEBE] hover:bg-[#F2EDE0]'}`}
                       >
                         <span className="capitalize">{cat} Exercises</span>
                         <ChevronRight className="w-4 h-4 opacity-70" />
@@ -953,14 +949,14 @@ export default function SeniorFitnessDashboard() {
                 </div>
 
                 {/* Right Side Column: Main checklist cards row */}
-                <div className="lg:col-span-8 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-4 md:p-6 shadow-sm">
+                <div className="lg:col-span-8 bg-white rounded-xl border border-[#D3CEBE] p-4 md:p-6 shadow-sm">
                   <h3 className={`${textScale.h3} text-[#1E3A8A] flex items-center gap-2 border-b border-[#E6E2D3] pb-3 mb-4`}>
                     <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                     <span>Exercise Routine Checklist</span>
                   </h3>
 
                   {dailyActivitiesList.length === 0 ? (
-                    <div className="text-center py-10 text-[#7A7667] bg-[#FCFAF6] rounded-2xl border-2 border-dashed border-[#D3CEBE]">
+                    <div className="text-center py-10 text-[#7A7667] bg-[#FAFAFA] rounded-lg border border-dashed border-[#D3CEBE]">
                       <p className={textScale.body}>No routines match this category selector filter.</p>
                     </div>
                   ) : (
@@ -970,7 +966,7 @@ export default function SeniorFitnessDashboard() {
                         const isSelected = selectedExercise.name === activity.name;
 
                         return (
-                          <div key={activity.id} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isSelected ? 'bg-[#FAF7EE] border-[#1E3A8A] ring-4 ring-[#1E3A8A]/10' : 'bg-white border-[#D3CEBE] hover:bg-[#FCFAF6]'}`}>
+                          <div key={activity.id} className={`flex items-center justify-between p-4 rounded-lg border transition-all ${isSelected ? 'bg-[#FAF7EE] border-[#1E3A8A]' : 'bg-white border-[#D3CEBE] hover:bg-[#FAFAFA]'}`}>
                             <div className="flex-1 cursor-pointer pr-4 min-w-0" onClick={() => { if (matchedDbEx) { handleSelectExercise(matchedDbEx); setActiveTab('timer'); } }}>
                               <span className={`${textScale.small} font-bold text-[#7A7667] uppercase`}>{activity.category}</span>
                               <h4 className={`${textScale.h4} text-[#2D2D2D] truncate font-medium`}>{activity.name}</h4>
@@ -979,9 +975,9 @@ export default function SeniorFitnessDashboard() {
 
                             <button
                               onClick={() => handleToggleActivityCompletion(activity)}
-                              className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${activity.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-[#FCFAF6] border-[#D3CEBE] text-[#1E3A8A]'}`}
+                              className={`w-14 h-14 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${activity.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-[#FAFAFA] border-[#D3CEBE] text-[#1E3A8A]'}`}
                             >
-                              {activity.completed ? <CheckCircle2 className="w-7 h-7" /> : <div className="w-5 h-5 rounded bg-white border-2 border-[#D3CEBE]" />}
+                              {activity.completed ? <CheckCircle2 className="w-7 h-7" /> : <div className="w-5 h-5 rounded-xs bg-white border border-[#D3CEBE]" />}
                             </button>
                           </div>
                         );
@@ -997,7 +993,7 @@ export default function SeniorFitnessDashboard() {
           {/* TAB 2: ACTIVE TIMER COMPANION VIEW */}
           {activeTab === 'timer' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="timer-tab-view">
-              <div className="lg:col-span-6 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 space-y-6 shadow-sm">
+              <div className="lg:col-span-6 bg-white rounded-xl border border-[#D3CEBE] p-5 md:p-6 space-y-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E6E2D3] pb-4 gap-4">
                   <div>
                     <span className={`${textScale.small} font-bold text-[#7A7667] uppercase block mb-0.5`}>Active Focus:</span>
@@ -1006,7 +1002,7 @@ export default function SeniorFitnessDashboard() {
 
                   <button
                     onClick={() => handleSpeakInstructions(selectedExercise)}
-                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold border-2 transition-all cursor-pointer ${isSpeaking ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse' : 'bg-[#FCFAF6] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F5F2EB]'}`}
+                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-bold border transition-all cursor-pointer ${isSpeaking ? 'bg-[#D97706] border-[#D97706] text-white animate-pulse' : 'bg-[#FAFAFA] border-[#D3CEBE] text-[#2D2D2D] hover:bg-[#F2EDE0]'}`}
                     style={{ minHeight: '48px' }}
                   >
                     {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5 text-[#1E3A8A]" />}
@@ -1014,7 +1010,7 @@ export default function SeniorFitnessDashboard() {
                   </button>
                 </div>
 
-                <div className={`${textScale.body} text-[#2D2D2D] bg-[#FCFAF6] p-5 rounded-2xl border-2 border-[#E6E2D3]`}>
+                <div className={`${textScale.body} text-[#2D2D2D] bg-[#FAFAFA] p-5 rounded-lg border border-[#E6E2D3]`}>
                   <p className="leading-relaxed font-medium">{selectedExercise.description}</p>
                 </div>
 
@@ -1023,14 +1019,14 @@ export default function SeniorFitnessDashboard() {
                   <ol className="space-y-3">
                     {selectedExercise.instructions.map((step, idx) => (
                       <li key={idx} className="flex gap-4 items-start">
-                        <span className="w-9 h-9 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold flex items-center justify-center shrink-0 border border-[#1E3A8A]/10">{idx + 1}</span>
+                        <span className="w-9 h-9 rounded-full bg-[#1E3A8A]/5 text-[#1E3A8A] font-bold flex items-center justify-center shrink-0 border border-[#1E3A8A]/10">{idx + 1}</span>
                         <p className={`${textScale.bodySmall} text-[#2D2D2D] pt-1 leading-relaxed`}>{step}</p>
                       </li>
                     ))}
                   </ol>
                 </div>
 
-                <div className="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl flex gap-3 items-start">
+                <div className="bg-rose-50 border border-rose-200 p-4 rounded-lg flex gap-3 items-start">
                   <Info className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
                   <div>
                     <h4 className={`${textScale.small} font-bold text-rose-950`}>Elderly Safety First:</h4>
@@ -1039,17 +1035,17 @@ export default function SeniorFitnessDashboard() {
                 </div>
               </div>
 
-              <div className="lg:col-span-6 bg-[#1E3A8A] text-white rounded-[28px] border-2 border-[#1E3A8A] p-5 md:p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(30,58,138,0.2)] relative">
+              <div className="lg:col-span-6 bg-[#1A3073] text-white rounded-xl border border-[#1A3073] p-5 md:p-6 flex flex-col justify-between relative shadow-sm">
                 <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-6">
                   <div className="flex items-center gap-2">
                     <TimerIcon className="w-5 h-5 text-white/80" />
                     <h3 className={`${textScale.h3} text-white`}>Exercise Companion Timer</h3>
                   </div>
-                  <span className={`${textScale.small} bg-white/10 px-3 py-1 rounded-full font-bold text-white`}>Target: {selectedExercise.minutes} min</span>
+                  <span className={`${textScale.small} bg-white/10 px-3 py-1 rounded-md font-bold text-white`}>Target: {selectedExercise.minutes} min</span>
                 </div>
 
                 <div className="text-center py-6">
-                  <div className={`${textScale.timerText} tracking-wider py-5 px-6 bg-white/10 rounded-2xl border border-white/20 inline-block text-white`}>
+                  <div className={`${textScale.timerText} tracking-wider py-5 px-6 bg-white/10 rounded-lg border border-white/20 inline-block text-white`}>
                     {formatTimerDisplay(timerSecondsLeft)}
                   </div>
                   <p className={`${textScale.small} text-white/75 mt-3 font-bold uppercase tracking-wider`}>Minutes : Seconds Remaining</p>
@@ -1061,7 +1057,7 @@ export default function SeniorFitnessDashboard() {
                     {[1, 5, 10, 15, 30].map((mins) => {
                       const isCurrent = (timerInitialSeconds === mins * 60);
                       return (
-                        <button key={mins} onClick={() => handleSetTimerPreset(mins)} className={`py-2 px-3.5 rounded-lg border text-sm transition-all font-bold cursor-pointer ${isCurrent ? 'bg-white border-white text-[#1E3A8A] shadow-md' : 'bg-white/15 border-white/10 text-white'}`}>
+                        <button key={mins} onClick={() => handleSetTimerPreset(mins)} className={`py-2 px-3.5 rounded-md border text-sm transition-all font-bold cursor-pointer ${isCurrent ? 'bg-white border-white text-[#1E3A8A]' : 'bg-white/15 border-white/10 text-white'}`}>
                           {mins} min
                         </button>
                       );
@@ -1069,31 +1065,31 @@ export default function SeniorFitnessDashboard() {
                   </div>
 
                   <div className="flex gap-2 w-full max-w-xs mx-auto">
-                    <button onClick={() => handleAdjustTimer(-1)} className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-white font-bold text-sm cursor-pointer">➖ 1 Min</button>
-                    <button onClick={() => handleAdjustTimer(1)} className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-white font-bold text-sm cursor-pointer">➕ 1 Min</button>
+                    <button onClick={() => handleAdjustTimer(-1)} className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-white font-bold text-sm cursor-pointer">➖ 1 Min</button>
+                    <button onClick={() => handleAdjustTimer(1)} className="flex-1 py-3 bg-white/15 hover:bg-white/25 border border-white/20 rounded-lg text-white font-bold text-sm cursor-pointer">➕ 1 Min</button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-8">
-                  <button onClick={() => setIsTimerRunning(!isTimerRunning)} className={`flex items-center justify-center gap-2.5 py-4.5 px-4 rounded-xl font-bold transition-all cursor-pointer text-lg ${isTimerRunning ? 'bg-[#D97706] text-white' : 'bg-white text-[#1E3A8A]'}`}>
+                  <button onClick={() => setIsTimerRunning(!isTimerRunning)} className={`flex items-center justify-center gap-2.5 py-4.5 px-4 rounded-lg font-bold transition-all cursor-pointer text-lg ${isTimerRunning ? 'bg-[#D97706] text-white' : 'bg-white text-[#1E3A8A]'}`}>
                     {isTimerRunning ? <><Pause className="w-5 h-5 fill-current" /><span>PAUSE</span></> : <><Play className="w-5 h-5 fill-current" /><span>START</span></>}
                   </button>
-                  <button onClick={() => { setIsTimerRunning(false); setTimerSecondsLeft(timerInitialSeconds); }} className="flex items-center justify-center gap-2 py-4.5 px-4 bg-transparent hover:bg-white/10 text-white font-bold rounded-xl border-2 border-white transition-all cursor-pointer text-lg">
+                  <button onClick={() => { setIsTimerRunning(false); setTimerSecondsLeft(timerInitialSeconds); }} className="flex items-center justify-center gap-2 py-4.5 px-4 bg-transparent hover:bg-white/10 text-white font-bold rounded-lg border border-white transition-all cursor-pointer text-lg">
                     <RotateCcw className="w-5 h-5" /><span>RESET</span>
                   </button>
                 </div>
 
                 <AnimatePresence>
                   {showCompletionPrompt && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute inset-0 bg-[#1E3A8A]/98 rounded-[28px] flex flex-col items-center justify-center p-6 text-center text-white z-10">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute inset-0 bg-[#1A3073] rounded-xl flex flex-col items-center justify-center p-6 text-center text-white z-10">
                       <div className="space-y-4 max-w-sm">
                         <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto"><Award className="w-10 h-10" /></div>
                         <div>
                           <h4 className={`${textScale.h2} text-white font-serif`}>Excellent Job! 🌟</h4>
                           <p className={`${textScale.bodySmall} text-white/90 mt-1`}>You completed {Math.round(timerInitialSeconds / 60)} minutes of <strong>{selectedExercise.name}</strong>.</p>
                         </div>
-                        <button onClick={() => { setShowCompletionPrompt(false); handleLogActivity(selectedExercise.name, Math.round(timerInitialSeconds / 60), selectedExercise.category); setTimerSecondsLeft(timerInitialSeconds); }} className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl shadow-md cursor-pointer transition-all text-base">✅ Yes, Save to My Log</button>
-                        <button onClick={() => { setShowCompletionPrompt(false); setTimerSecondsLeft(timerInitialSeconds); }} className="w-full py-2 text-white border border-white/30 rounded-xl cursor-pointer text-sm">Skip Logging</button>
+                        <button onClick={() => { setShowCompletionPrompt(false); handleLogActivity(selectedExercise.name, Math.round(timerInitialSeconds / 60), selectedExercise.category); setTimerSecondsLeft(timerInitialSeconds); }} className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-lg shadow-sm cursor-pointer transition-all text-base">✅ Yes, Save to My Log</button>
+                        <button onClick={() => { setShowCompletionPrompt(false); setTimerSecondsLeft(timerInitialSeconds); }} className="w-full py-2 text-white border border-white/30 rounded-lg cursor-pointer text-sm">Skip Logging</button>
                       </div>
                     </motion.div>
                   )}
@@ -1105,15 +1101,15 @@ export default function SeniorFitnessDashboard() {
           {/* TAB 3: WEEKLY PROGRESS & LOG HISTORY */}
           {activeTab === 'progress' && (
             <div className="space-y-6" id="progress-tab-view">
-              <div className="bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 shadow-sm">
+              <div className="bg-white rounded-xl border border-[#D3CEBE] p-5 md:p-6 shadow-sm">
                 <div className="space-y-1 pb-3 border-b border-[#E6E2D3] mb-4">
-                  <span className={`${textScale.small} bg-[#1E3A8A]/10 text-[#1E3A8A] font-bold text-xs uppercase px-2 py-0.5 rounded-md`}>Official CDC Guidelines</span>
+                  <span className={`${textScale.small} bg-[#1E3A8A]/5 text-[#1E3A8A] font-bold text-xs uppercase px-2 py-0.5 rounded-md`}>Official CDC Guidelines</span>
                   <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>My CDC Weekly Target Completion</h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/20">{Math.min(100, Math.round((progress.aerobicMins / progress.aerobicTarget) * 100))}%</div>
+                  <div className="bg-[#FAFAFA] p-4 rounded-lg border border-[#D3CEBE] flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/5 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/10">{Math.min(100, Math.round((progress.aerobicMins / progress.aerobicTarget) * 100))}%</div>
                     <div>
                       <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Aerobic Minutes</span>
                       <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.aerobicMins} / 150m</span>
@@ -1121,8 +1117,8 @@ export default function SeniorFitnessDashboard() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/20">{progress.strengthDays >= 2 ? "100%" : progress.strengthDays === 1 ? "50%" : "0%"}</div>
+                  <div className="bg-[#FAFAFA] p-4 rounded-lg border border-[#D3CEBE] flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/5 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/10">{progress.strengthDays >= 2 ? "100%" : progress.strengthDays === 1 ? "50%" : "0%"}</div>
                     <div>
                       <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Strength Days</span>
                       <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.strengthDays} / 2 days</span>
@@ -1130,8 +1126,8 @@ export default function SeniorFitnessDashboard() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FCFAF6] p-4 rounded-xl border-2 border-[#D3CEBE] flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/20">{progress.balanceDays >= 3 ? "100%" : Math.round((progress.balanceDays / 3) * 100)}%</div>
+                  <div className="bg-[#FAFAFA] p-4 rounded-lg border border-[#D3CEBE] flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#1E3A8A]/5 text-[#1E3A8A] flex items-center justify-center font-black border border-[#1E3A8A]/10">{progress.balanceDays >= 3 ? "100%" : Math.round((progress.balanceDays / 3) * 100)}%</div>
                     <div>
                       <span className={`${textScale.small} block text-[#7A7667] font-bold uppercase`}>Balance Days</span>
                       <span className={`${textScale.h4} text-[#2D2D2D]`}>{progress.balanceDays} / 3 days</span>
@@ -1144,14 +1140,14 @@ export default function SeniorFitnessDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* Completed logs feed row */}
-                <div className="lg:col-span-7 bg-white rounded-[28px] border-2 border-[#D3CEBE] p-5 md:p-6 space-y-4 shadow-sm" id="completed-logs-panel">
+                <div className="lg:col-span-7 bg-white rounded-xl border border-[#D3CEBE] p-5 md:p-6 space-y-4 shadow-sm" id="completed-logs-panel">
                   <div className="flex justify-between items-center border-b border-[#E6E2D3] pb-3 mb-2">
                     <h3 className={`${textScale.h3} text-[#1E3A8A] flex items-center gap-2 font-serif`}><Award className="w-5 h-5" /><span>Completed Workouts Feed</span></h3>
-                    <span className="bg-[#FCFAF6] border border-[#D3CEBE] text-[#5A5A40] text-xs font-bold py-1 px-3 rounded-full">{completedLogs.length} Workouts</span>
+                    <span className="bg-[#FAFAFA] border border-[#D3CEBE] text-[#5A5A40] text-xs font-bold py-1 px-3 rounded-full">{completedLogs.length} Workouts</span>
                   </div>
 
                   {completedLogs.length === 0 ? (
-                    <div className="text-center py-12 text-[#7A7667] bg-[#FCFAF6] rounded-2xl border-2 border-dashed border-[#D3CEBE]">
+                    <div className="text-center py-12 text-[#7A7667] bg-[#FAFAFA] rounded-lg border border-dashed border-[#D3CEBE]">
                       <p className={textScale.body}>No workouts logged yet for this week.</p>
                     </div>
                   ) : (
@@ -1159,12 +1155,12 @@ export default function SeniorFitnessDashboard() {
                       {completedLogs.map((log) => {
                         const dateObj = weekDays.find(d => d.dateString === log.dateString);
                         return (
-                          <div key={log.id} className="flex items-center justify-between p-3.5 bg-[#FCFAF6]/70 border-2 border-[#E6E2D3] rounded-xl">
+                          <div key={log.id} className="flex items-center justify-between p-3.5 bg-[#FAFAFA] border border-[#E6E2D3] rounded-lg">
                             <div>
                               <h4 className={`${textScale.bodySmall} font-bold text-[#2D2D2D]`}>{log.name}</h4>
                               <p className={`${textScale.small} text-[#7A7667] font-semibold`}>{dateObj ? dateObj.dayName : "Other"} • {log.minutes} mins • {log.timestamp}</p>
                             </div>
-                            <button onClick={() => handleRemoveLog(log.id)} className="p-3 text-[#7A7667] hover:text-rose-700 bg-white border border-[#D3CEBE] rounded-lg cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                            <button onClick={() => handleRemoveLog(log.id)} className="p-3 text-[#7A7667] hover:text-rose-700 bg-white border border-[#D3CEBE] rounded-md cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         );
                       })}
@@ -1172,12 +1168,12 @@ export default function SeniorFitnessDashboard() {
                   )}
 
                   <div className="pt-2">
-                    <button onClick={handleResetAllData} className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 cursor-pointer text-xs">Clear Log & Start Fresh Week</button>
+                    <button onClick={handleResetAllData} className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-md border border-rose-200 cursor-pointer text-xs">Clear Log & Start Fresh Week</button>
                   </div>
                 </div>
 
-                {/* RESTORED: MANUAL QUICK-LOG WORKOUT FORM WIDGET PANEL */}
-                <div className="lg:col-span-5 bg-white border-2 border-[#D3CEBE] rounded-[28px] p-5 md:p-6 space-y-4 shadow-sm">
+                {/* MANUAL QUICK-LOG WORKOUT FORM WIDGET PANEL */}
+                <div className="lg:col-span-5 bg-white border border-[#D3CEBE] rounded-xl p-5 md:p-6 space-y-4 shadow-sm">
                   <h4 className={`${textScale.h4} text-[#1E3A8A] font-serif flex items-center gap-2 border-b border-[#E6E2D3] pb-2`}>
                     <Zap className="w-5 h-5" />
                     <span>Manual Quick Logger</span>
@@ -1195,7 +1191,7 @@ export default function SeniorFitnessDashboard() {
                         placeholder="e.g., Gardening, Slow Swimming" 
                         value={manualWorkoutName}
                         onChange={(e) => setManualWorkoutName(e.target.value)}
-                        className="w-full border-2 border-[#D3CEBE] p-2.5 rounded-xl text-sm focus:outline-none focus:border-[#1E3A8A]"
+                        className="w-full border border-[#D3CEBE] p-2.5 rounded-lg text-sm focus:outline-none focus:border-[#1E3A8A]"
                       />
                     </div>
 
@@ -1208,7 +1204,7 @@ export default function SeniorFitnessDashboard() {
                           min={1} 
                           value={manualWorkoutDuration}
                           onChange={(e) => setManualWorkoutDuration(Number(e.target.value) || 1)}
-                          className="w-full border-2 border-[#D3CEBE] p-2.5 rounded-xl text-sm focus:outline-none focus:border-[#1E3A8A]"
+                          className="w-full border border-[#D3CEBE] p-2.5 rounded-lg text-sm focus:outline-none focus:border-[#1E3A8A]"
                         />
                       </div>
                       <div>
@@ -1216,7 +1212,7 @@ export default function SeniorFitnessDashboard() {
                         <select 
                           value={manualWorkoutCategory} 
                           onChange={(e) => setManualWorkoutCategory(e.target.value as any)}
-                          className="w-full border-2 border-[#D3CEBE] p-2.5 rounded-xl bg-white text-sm focus:outline-none focus:border-[#1E3A8A]"
+                          className="w-full border border-[#D3CEBE] p-2.5 rounded-lg bg-white text-sm focus:outline-none focus:border-[#1E3A8A]"
                         >
                           <option value="aerobic">Aerobic</option>
                           <option value="strength">Strength</option>
@@ -1226,7 +1222,7 @@ export default function SeniorFitnessDashboard() {
                       </div>
                     </div>
 
-                    <button type="submit" className="w-full text-center py-3 bg-[#1E3A8A] hover:bg-[#1A3073] text-white rounded-xl font-bold text-sm cursor-pointer transition-all">
+                    <button type="submit" className="w-full text-center py-3 bg-[#1E3A8A] hover:bg-[#1A3073] text-white rounded-lg font-bold text-sm cursor-pointer transition-all">
                       ⚡ Save Workout Directly
                     </button>
                   </form>
@@ -1237,10 +1233,10 @@ export default function SeniorFitnessDashboard() {
           )}
 
         </main>
-      </div>
+                  </div>
 
       {/* FOOTER */}
-      <footer className="text-center py-8 text-[#7A7667] border-t-2 border-[#E6E2D3]/60 max-w-7xl w-full mx-auto mt-12 bg-white rounded-t-3xl p-4 border-l-2 border-r-2 border-[#D3CEBE]">
+      <footer className="text-center py-8 text-[#7A7667] border-t border-[#E6E2D3] max-w-7xl w-full mx-auto mt-12 bg-white rounded-t-lg p-4 border-l border-r border-[#D3CEBE]">
         <p className={`${textScale.bodySmall} font-serif font-semibold text-[#1E3A8A]`}>Senior Fitness Scheduler & Tracker</p>
         <p className="text-[10px] text-[#7A7667]/75 tracking-wider mt-0.5">Designed specifically for older adults with highly visible layouts and clear text controls</p>
       </footer>
@@ -1248,8 +1244,8 @@ export default function SeniorFitnessDashboard() {
       {/* MODAL: Log Custom Scheduled Activity */}
       <AnimatePresence>
         {showCustomLogModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="custom-schedule-modal">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-[32px] border-2 border-[#D3CEBE] p-6 md:p-8 max-w-lg w-full shadow-2xl relative text-[#2D2D2D]">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="custom-schedule-modal">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl border border-[#D3CEBE] p-6 md:p-8 max-w-lg w-full shadow-lg relative text-[#2D2D2D]">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className={`${textScale.h3} text-[#1E3A8A] font-serif`}>Add Scheduled Activity</h3>
@@ -1261,11 +1257,11 @@ export default function SeniorFitnessDashboard() {
               <form onSubmit={handleAddCustomScheduleItem} className="space-y-6">
                 <div className="space-y-2">
                   <label className={`${textScale.small} block font-bold uppercase text-[#1E3A8A]`}>Select Activity Type:</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto p-2 border-2 border-[#E6E2D3] rounded-2xl bg-[#FCFAF6]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto p-2 border border-[#E6E2D3] rounded-lg bg-[#FAFAFA]">
                     {EXERCISES_DB.map((ex) => (
                       <button
                         type="button" key={ex.id} onClick={() => setCustomLogExerciseId(ex.id)}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${customLogExerciseId === ex.id ? 'bg-white border-[#1E3A8A] ring-2 ring-[#1E3A8A]/20 font-bold' : 'bg-white border-[#D3CEBE] hover:bg-[#F5F2EB]'}`}
+                        className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between cursor-pointer ${customLogExerciseId === ex.id ? 'bg-white border-[#1E3A8A] font-bold' : 'bg-white border-[#D3CEBE] hover:bg-[#FAFAFA]'}`}
                       >
                         <span className={`${textScale.small} font-bold text-[#2D2D2D]`}>{ex.name}</span>
                         <span className="text-[10px] uppercase font-bold text-[#7A7667] mt-1">{ex.category}</span>
@@ -1277,17 +1273,17 @@ export default function SeniorFitnessDashboard() {
                 <div className="space-y-2">
                   <label className={`${textScale.small} block font-bold uppercase text-[#1E3A8A]`}>Duration (Minutes):</label>
                   <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => setCustomLogMinutes(prev => Math.max(1, prev - 5))} className="p-3 bg-white border-2 border-[#D3CEBE] rounded-xl font-bold text-lg cursor-pointer w-14">-5</button>
+                    <button type="button" onClick={() => setCustomLogMinutes(prev => Math.max(1, prev - 5))} className="p-3 bg-white border border-[#D3CEBE] rounded-lg font-bold text-lg cursor-pointer w-14">-5</button>
                     <input
                       type="number" required min={1} max={180} value={customLogMinutes}
                       onChange={(e) => setCustomLogMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="flex-1 py-3 px-4 rounded-xl border-2 border-[#D3CEBE] text-center font-bold text-xl text-[#2D2D2D]"
+                      className="flex-1 py-3 px-4 rounded-lg border border-[#D3CEBE] text-center font-bold text-xl text-[#2D2D2D]"
                     />
-                    <button type="button" onClick={() => setCustomLogMinutes(prev => Math.min(180, prev + 5))} className="p-3 bg-white border-2 border-[#D3CEBE] rounded-xl font-bold text-lg cursor-pointer w-14">+5</button>
+                    <button type="button" onClick={() => setCustomLogMinutes(prev => Math.min(180, prev + 5))} className="p-3 bg-white border border-[#D3CEBE] rounded-lg font-bold text-lg cursor-pointer w-14">+5</button>
                   </div>
                 </div>
 
-                <button type="submit" className="w-full py-4 bg-[#1E3A8A] text-white font-bold text-lg rounded-2xl cursor-pointer" style={{ minHeight: '56px' }}>Save to Day&apos;s Schedule!</button>
+                <button type="submit" className="w-full py-4 bg-[#1E3A8A] text-white font-bold text-lg rounded-lg cursor-pointer" style={{ minHeight: '56px' }}>Save to Day&apos;s Schedule!</button>
               </form>
             </motion.div>
           </div>
