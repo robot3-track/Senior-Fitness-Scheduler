@@ -1,98 +1,101 @@
 export interface Exercise {
   id: string;
   name: string;
-  category: 'aerobic' | 'strength' | 'balance' | 'stretch';
-  minutes: number;
   description: string;
-  instructions: string[];
-  safetyTip: string;
+  minutes: number;
+  category: 'aerobic' | 'strength' | 'flexibility' | 'balance';
   targetMuscles: string[];
+  instructions: string[];
 }
+
+export const MUSCLE_GROUPS = [
+  'Legs', 
+  'Arms', 
+  'Core', 
+  'Back', 
+  'Shoulders', 
+  'Chest'
+];
 
 export const EXERCISES_DB: Exercise[] = [
   {
-    id: 'brisk-walk',
-    name: 'Brisk Walking',
+    id: 'ex_1',
+    name: 'Seated Marching',
+    description: 'A gentle aerobic exercise to get your heart rate up while safely seated.',
+    minutes: 10,
     category: 'aerobic',
-    minutes: 30,
-    description: 'A gentle but active walk. Move at a pace where you can comfortably talk, but not sing.',
+    targetMuscles: ['Legs', 'Core'],
     instructions: [
-      'Put on comfortable, supportive walking shoes.',
-      'Hold your head up high, look forward, and relax your shoulders and neck.',
-      'Swing your arms freely with a slight bend in your elbows.',
-      'Walk smoothly, letting your foot roll gently from heel to toe.'
-    ],
-    safetyTip: 'Walk on level, well-lit pathways. Bring water along, and slow down if you feel out of breath.',
-    targetMuscles: ['Heart', 'Calves', 'Thighs']
+      'Sit up straight in a sturdy chair with your feet flat on the floor.',
+      'Hold the edges of the chair for support if needed.',
+      'Lift your right knee up as high as is comfortable, then lower it.',
+      'Alternate with your left knee, marching in place.',
+      'Keep a steady, comfortable pace and breathe normally.'
+    ]
   },
   {
-    id: 'chair-stand',
-    name: 'Sit-to-Stand (Chair Stands)',
-    category: 'strength',
-    minutes: 10,
-    description: 'Strengthens your legs, thighs, and hips, making it easier to stand up from chairs or cars.',
-    instructions: [
-      'Find a sturdy, armless chair. Place its back securely against a flat wall.',
-      'Sit toward the front of the seat, with your feet flat on the floor, hip-width apart.',
-      'Fold your arms across your chest, or hold them straight out parallel to the floor.',
-      'Lean forward slightly from your hips, and stand up slowly using only your leg strength.'
-    ],
-    safetyTip: 'Never use a chair with wheels. Keep your knees aligned over your ankles as you rise.',
-    targetMuscles: ['Thighs', 'Hips', 'Glutes']
-  },
-  {
-    id: 'wall-pushup',
+    id: 'ex_2',
     name: 'Wall Push-Ups',
+    description: 'Build upper body strength safely using a wall for support.',
+    minutes: 5,
     category: 'strength',
-    minutes: 10,
-    description: 'Builds vital upper-body strength in your chest, shoulders, and arms without straining your lower back.',
+    targetMuscles: ['Arms', 'Chest', 'Shoulders'],
     instructions: [
-      'Stand upright about arm\'s length facing a solid, flat wall.',
-      'Place your palms flat against the wall at shoulder height and shoulder-width apart.',
-      'Keep your body straight. Slowly bend your elbows and lean your face in toward the wall.'
-    ],
-    safetyTip: 'Make sure your shoes have good traction and the floor is dry and clean.',
-    targetMuscles: ['Chest', 'Shoulders', 'Arms']
+      'Stand facing a sturdy wall, about arm\'s length away.',
+      'Place your hands flat against the wall at shoulder height and width.',
+      'Slowly bend your elbows and lean your body toward the wall.',
+      'Push back slowly until your arms are straight.',
+      'Repeat 10 times, taking breaks if you feel tired.'
+    ]
   },
   {
-    id: 'single-leg',
-    name: 'Single-Leg Stand',
-    category: 'balance',
+    id: 'ex_3',
+    name: 'Heel Raises',
+    description: 'Strengthens your calves and helps improve balance.',
     minutes: 5,
-    description: 'Excellent for boosting balance and foot-ankle stability, reducing the risk of slips or falls.',
+    category: 'strength',
+    targetMuscles: ['Legs'],
     instructions: [
-      'Stand beside a sturdy chair, heavy counter, or wall. Place one hand on it for support.',
-      'Slowly lift one foot slightly off the floor, balancing entirely on your other leg.',
-      'Try to hold this balanced posture for 15 to 30 seconds.'
-    ],
-    safetyTip: 'Always keep your hands within an inch of your support source in case you wobble.',
-    targetMuscles: ['Ankles', 'Calves', 'Core']
+      'Stand behind a sturdy chair and hold the back for balance.',
+      'Slowly lift your heels off the floor so you are standing on your toes.',
+      'Hold the position for one second.',
+      'Slowly lower your heels back to the floor.',
+      'Repeat 10 to 15 times.'
+    ]
+  },
+  {
+    id: 'ex_4',
+    name: 'Seated Torso Twists',
+    description: 'Improves core flexibility and reduces back stiffness.',
+    minutes: 5,
+    category: 'flexibility',
+    targetMuscles: ['Core', 'Back'],
+    instructions: [
+      'Sit upright in a chair with your feet flat on the floor.',
+      'Place your hands comfortably on your thighs.',
+      'Slowly turn your upper body to the right, looking over your right shoulder.',
+      'Hold for 5 seconds, then slowly return to the center.',
+      'Repeat on the left side. Do 5 twists per side.'
+    ]
   }
 ];
 
-export const MUSCLE_GROUPS = ['Heart', 'Calves', 'Thighs', 'Hips', 'Glutes', 'Chest', 'Shoulders', 'Arms', 'Ankles', 'Core'];
-
+// Helper function to generate a simple sliding window of dates for the UI calendar
 export function getWeekDates() {
-  const today = new Date();
-  const currentDay = today.getDay();
-  const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-  const monday = new Date(today);
-  monday.setDate(diffToMonday);
-  
-  const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const dates = [];
-  const todayStr = today.toISOString().split('T')[0];
+  const today = new Date();
   
-  for (let i = 0; i < 7; i++) {
-    const dayDate = new Date(monday);
-    dayDate.setDate(monday.getDate() + i);
+  // Get 3 days before, today, and 3 days after
+  for (let i = -3; i <= 3; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
     dates.push({
-      dateString: dayDate.toISOString().split('T')[0],
-      dayName: dayNames[i],
-      dayOfMonth: dayDate.getDate(),
-      monthLabel: dayDate.toLocaleDateString('en-US', { month: 'short' }),
-      isToday: todayStr === dayDate.toISOString().split('T')[0]
+      dateString: d.toISOString().split('T')[0], // Format: YYYY-MM-DD
+      dayName: d.toLocaleDateString('en-US', { weekday: 'short' }), // Format: Mon, Tue
+      dayOfMonth: d.getDate(),
+      isToday: i === 0
     });
   }
+  
   return dates;
 }
