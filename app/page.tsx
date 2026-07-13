@@ -665,7 +665,6 @@ export default function SeniorFitnessDashboard() {
         <div className="max-w-2xl w-full mx-auto my-auto space-y-8 bg-white rounded-md border border-slate-200 p-6 md:p-10 shadow-sm">
           <div className="text-center space-y-4">
             <div className="inline-flex p-3.5 bg-slate-100 text-[#2b5c8f] rounded-sm">
-              <Heart className="w-10 h-10 fill-current" />
             </div>
             <h1 className={`${textScale.title} text-[#2b5c8f] leading-tight`}>Senior Fitness Scheduler</h1>
             <p className={`${textScale.subtitle} text-slate-600 max-w-lg mx-auto`}>
@@ -849,19 +848,19 @@ export default function SeniorFitnessDashboard() {
               <div className="w-full bg-white rounded-md border border-slate-200 p-5 space-y-4 shadow-sm flex flex-col justify-between">
                 <div className="space-y-3">
                   <span className="text-[#2b5c8f] font-bold text-xs uppercase tracking-wider bg-slate-100 py-1 px-2.5 rounded-sm border border-slate-200 inline-block">🛡️ Safe Exercise Protocols</span>
-                  <h3 className={`${textScale.h3} text-[#2b5c8f] font-serif`}>Essential Safe-Aging Principles</h3>
+                  <h3 className={`${textScale.h3} text-[#2b5c8f] font-serif`}>Essential Ideas for Safe Aging!</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-slate-800 pt-2">
                     <li className="bg-slate-50 p-4 rounded-md border border-slate-200 flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">🛋️</span>
+                      <span className="text-xl shrink-0"></span>
                       <p className={`${textScale.small} leading-relaxed`}><strong>Stable Support:</strong> Keep a heavy, stable chair or wall nearby for physical support during balance steps.</p>
                     </li>
                     <li className="bg-slate-50 p-4 rounded-md border border-slate-200 flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">💧</span>
-                      <p className={`${textScale.small} leading-relaxed`}><strong>Stay Hydrated:</strong> Keep a water glass handy and drink before, during, and after routines.</p>
+                      <span className="text-xl shrink-0"></span>
+                      <p className={`${textScale.small} leading-relaxed`}><strong>Stay Hydrated:</strong> Keep a water glass handy and drink before, during, and after routines. We don't want you to get dehydrated!</p>
                     </li>
                     <li className="bg-slate-50 p-4 rounded-md border border-slate-200 flex gap-2.5 items-start">
-                      <span className="text-xl shrink-0">🛑</span>
-                      <p className={`${textScale.small} leading-relaxed`}><strong>Stop on Pain:</strong> Working out should be comfortable. Stop immediately if anything hurts.</p>
+                      <span className="text-xl shrink-0"></span>
+                      <p className={`${textScale.small} leading-relaxed`}><strong>Stop on Pain:</strong> Working out should be comfortable. Stop immediately if anything hurts!</p>
                     </li>
                   </ul>
                 </div>
