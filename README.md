@@ -1,5 +1,7 @@
 # Senior Fitness and Activity Tracker
 
+[![Build Android APK Artifact](https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/workflows/android-build.yml/badge.svg)](https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/workflows/android-build.yml)
+
 A web-based (but can be built as mobile app too!) physical activity scheduler and tracker designed for older adults. This application is aligned with the Centers for Disease Control and Prevention (CDC) physical activity guidelines for older adults, tracking aerobic exercise minutes, muscle-strengthening sessions, and balance-training days. This app also follows and supports two of the UN Sustainbility Goals.
 
 ## Accessibility Features
