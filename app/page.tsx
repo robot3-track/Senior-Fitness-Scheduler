@@ -10,6 +10,9 @@ interface LogItem {
   name: string;
   minutes: number;
   category: 'aerobic' | 'strength' | 'balance';
+  // --- ADDED CDC INTENSITY & UN RPE METRICS ---
+  intensity: 'moderate' | 'vigorous'; // CDC calculates 1 min vigorous = 2 mins moderate credit
+  rpeScore: number; // UN Decade of Healthy Ageing exertion tracking (Borg Scale 1-10)
 }
 
 interface DayNote {
@@ -17,6 +20,8 @@ interface DayNote {
   notesText: string;
   feltGood: boolean;
   drankWater: boolean;
+  // --- ADDED FALL RISK TRACKING ---
+  balanceConfidenceScore: number; // Fall risk indicator rating (1-5) for UN SDG 3.4
 }
 
 interface UserSettings {
@@ -26,6 +31,7 @@ interface UserSettings {
   fontSize: 'normal' | 'large';
   audioPrompts: boolean;
   restTimerSeconds: number;
+  hapticFeedback: boolean; // Gentle vibrations for timers & exercise prompts
 }
 
 type ActiveScreen = 'menu' | 'exercises' | 'timer' | 'progress' | 'notes' | 'settings' | 'sdgInfo';
@@ -52,7 +58,8 @@ export default function FitnessPlanner() {
     highContrastMode: false,
     fontSize: 'large',
     audioPrompts: true,
-    restTimerSeconds: 60
+    restTimerSeconds: 60,
+    hapticFeedback: true
   });
 
   // --- EXERCISE & TIMER STATES ---
@@ -61,11 +68,18 @@ export default function FitnessPlanner() {
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [safetyCleared, setSafetyCleared] = useState({ clearSpace: false, hasWater: false, goodShoes: false });
+  
+  // --- WORKOUT INTENSITY & SAFETY FLOW STATES ---
+  const [currentIntensity, setCurrentIntensity] = useState<'moderate' | 'vigorous'>('moderate');
+  const [currentRpe, setCurrentRpe] = useState<number>(5);
+  const [timerPhase, setTimerPhase] = useState<'warmup' | 'active' | 'cooldown'>('warmup');
+  const [showInSessionEmergencyAlert, setShowInSessionEmergencyAlert] = useState(false);
 
   // --- NOTES STATES (make sure to keep this private)---
   const [currentNoteText, setCurrentNoteText] = useState('');
   const [currentFeltGood, setCurrentFeltGood] = useState(true); // make "feel good" automatically good for positivity, which I hope the user never clicks on false..
   const [currentDrankWater, setCurrentDrankWater] = useState(false);
+  const [currentBalanceConfidence, setCurrentBalanceConfidence] = useState(4); // Default strong balance confidence score
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -108,14 +122,30 @@ export default function FitnessPlanner() {
       setCurrentNoteText(match.notesText);
       setCurrentFeltGood(match.feltGood);
       setCurrentDrankWater(match.drankWater);
+      setCurrentBalanceConfidence(match.balanceConfidenceScore ?? 4);
     } else {
       setCurrentNoteText('');
       setCurrentFeltGood(true);
       setCurrentDrankWater(false);
+      setCurrentBalanceConfidence(4);
     }
   }, [selectedDate, dailyNotes]);
 
-  // --- VOICE FEEDBACK ASSISTANT ---
+  // --- VOICE FEEDBACK & HAPTIC ASSISTANT ---
+  const triggerHaptic = (duration: number | number[] = 200) => {
+    if (
+      settings.hapticFeedback &&
+      typeof window !== 'undefined' &&
+      'vibrate' in window.navigator
+    ) {
+      try {
+        window.navigator.vibrate(duration as VibratePattern);
+      } catch (e) {
+        // fallback for older browsers or restricted environments or else typescript errors appear
+      }
+    }
+  };
+
   const speakText = (text: string) => {
     if (!settings.audioPrompts || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -124,7 +154,7 @@ export default function FitnessPlanner() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // --- TIMER ENGINE ---
+  // --- TIMER ENGINE WITH SAFE WARMUP & COOLDOWN PHASES ---
   useEffect(() => {
     let timerId: NodeJS.Timeout;
     if (timerActive && secondsRemaining > 0) {
@@ -136,25 +166,43 @@ export default function FitnessPlanner() {
         });
       }, 1000);
     } else if (secondsRemaining === 0 && timerActive) {
-      setTimerActive(false);
-      if (timerExercise) {
-        const uniqueId = `log_${Date.now()}`;
-        const newCategory = (timerExercise.category as 'aerobic' | 'strength' | 'balance') || 'aerobic';
-        setLogs(prev => [{ 
-          id: uniqueId, 
-          date: selectedDate, 
-          name: timerExercise.name, 
-          minutes: timerExercise.minutes, 
-          category: newCategory
-        }, ...prev]);
-        
-        speakText("Great job! Workout complete.");
-        alert(`Excellent work! Your exercise "${timerExercise.name}" has been recorded towards your CDC and UN Health goals.`);
-        setCurrentScreen('menu');
+      if (timerPhase === 'warmup') {
+        // Transition from Warmup to Main Routine
+        triggerHaptic(400);
+        setTimerPhase('active');
+        if (timerExercise) setSecondsRemaining(timerExercise.minutes * 60);
+        speakText("Warm up complete. Starting main exercise now.");
+      } else if (timerPhase === 'active') {
+        // Transition from Main Routine to Cool Down
+        triggerHaptic(400);
+        setTimerPhase('cooldown');
+        setSecondsRemaining(120); // 2 minute cool down
+        speakText("Exercise portion completed. Let us cool down safely.");
+      } else if (timerPhase === 'cooldown') {
+        // Entire Session Finalized
+        setTimerActive(false);
+        triggerHaptic([200, 100, 200]);
+        if (timerExercise) {
+          const uniqueId = `log_${Date.now()}`;
+          const newCategory = (timerExercise.category as 'aerobic' | 'strength' | 'balance') || 'aerobic';
+          setLogs(prev => [{ 
+            id: uniqueId, 
+            date: selectedDate, 
+            name: timerExercise.name, 
+            minutes: timerExercise.minutes, 
+            category: newCategory,
+            intensity: currentIntensity,
+            rpeScore: currentRpe
+          }, ...prev]);
+          
+          speakText("Great job! Workout complete.");
+          alert(`Excellent work! Your exercise "${timerExercise.name}" has been recorded towards your CDC and UN Health goals.`);
+          setCurrentScreen('menu');
+        }
       }
     }
     return () => clearInterval(timerId);
-  }, [timerActive, secondsRemaining, timerExercise, selectedDate, settings.audioPrompts]);
+  }, [timerActive, secondsRemaining, timerExercise, selectedDate, settings.audioPrompts, timerPhase, currentIntensity, currentRpe]);
 
   // --- AUTHENTICATION ACTIONS ---
   const handleSignIn = (e: React.FormEvent) => {
@@ -184,38 +232,64 @@ export default function FitnessPlanner() {
   // --- APP ACTIONS ---
   const startExerciseFlow = (ex: Exercise) => {
     setTimerExercise(ex);
-    setSecondsRemaining(ex.minutes * 60);
+    setTimerPhase('warmup');
+    setSecondsRemaining(120); // Mandatory 2-minute dynamic warm-up
     setTimerActive(false);
     setSafetyCleared({ clearSpace: false, hasWater: false, goodShoes: false });
+    setCurrentIntensity('moderate');
+    setCurrentRpe(5);
     setCurrentScreen('timer');
   };
 
   const saveNotes = () => {
     setDailyNotes(prev => {
       const filtered = prev.filter(n => n.date !== selectedDate);
-      return [...filtered, { date: selectedDate, notesText: currentNoteText, feltGood: currentFeltGood, drankWater: currentDrankWater }];
+      return [...filtered, { 
+        date: selectedDate, 
+        notesText: currentNoteText, 
+        feltGood: currentFeltGood, 
+        drankWater: currentDrankWater,
+        balanceConfidenceScore: currentBalanceConfidence
+      }];
     });
     alert('Your daily health notes have been saved successfully.');
     setCurrentScreen('menu');
   };
 
+  // --- DOCTOR & CLINICAL REPORT CSV EXPORT ---
   const downloadMyLogsData = () => {
     if (logs.length === 0) {
       alert("You have no exercises saved yet to download.");
       return;
     }
-    let csvContent = "Date,Exercise Name,Category,Duration Minutes,CDC Guidelines Compliant\n";
+    let csvContent = "Date,Exercise Name,Category,Duration Minutes,Intensity Level,Perceived Exertion (RPE 1-10),CDC Compliant\n";
     logs.forEach(item => {
-      csvContent += `${item.date},"${item.name.replace(/"/g, '""')}",${item.category},${item.minutes},Yes\n`;
+      csvContent += `${item.date},"${item.name.replace(/"/g, '""')}",${item.category},${item.minutes},${item.intensity || 'moderate'},${item.rpeScore || 5},Yes\n`;
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `CDC_UN_Senior_Health_Report_${selectedDate}.csv`);
+    link.setAttribute("download", `Senior_Health_CDC_UN_Report_${selectedDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // --- PRINT / CLINICAL SUMMARY GENERATOR ---
+  const printDoctorSummary = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
+  // --- ACCURATE CDC ALGORITHMIC PROGRESS CALCULATORS ---
+  // CDC formula: 1 min Vigorous = 2 mins Moderate credit towards 150 min target
+  const calculateCdcAerobicCredit = () => {
+    return logs.filter(l => l.category === 'aerobic').reduce((sum, current) => {
+      const multiplier = current.intensity === 'vigorous' ? 2 : 1;
+      return sum + (current.minutes * multiplier);
+    }, 0);
   };
 
   const sumMinutesByCategory = (category: string) => 
@@ -282,7 +356,7 @@ export default function FitnessPlanner() {
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className={`${cardClass} p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6 shadow-sm`}>
+        <header className={`${cardClass} p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6 shadow-sm print:hidden`}>
           <div>
             <h1 className="text-4xl font-extrabold">Health Station</h1>
             <p className="text-xl mt-2 font-medium opacity-90">
@@ -411,10 +485,52 @@ export default function FitnessPlanner() {
           </div>
         )}
 
-        {/* SCREEN: TIMER */}
+        {/* SCREEN: TIMER WITH IN-SESSION FLOATING SAFETY BUTTON & CDC INTENSITY SETTINGS */}
         {currentScreen === 'timer' && timerExercise && (
-          <div className={`${cardClass} p-8 rounded-2xl space-y-10`}>
+          <div className={`${cardClass} p-8 rounded-2xl space-y-10 relative`}>
+            {/* FLOATING IN-SESSION SAFETY BUTTON FOR SENIOR EMERGENCIES */}
+            <div className="sticky top-4 z-50 flex justify-end">
+              <button 
+                onClick={() => setShowInSessionEmergencyAlert(!showInSessionEmergencyAlert)} 
+                className="bg-red-600 text-white font-extrabold px-8 py-4 rounded-full text-2xl border-4 border-red-950 shadow-2xl hover:bg-red-700 transition-transform active:scale-95 animate-pulse"
+              >
+                🚨 Need Help? Emergency Assistance
+              </button>
+            </div>
+
+            {showInSessionEmergencyAlert && (
+              <div className="p-8 rounded-2xl border-8 border-red-600 bg-red-100 text-red-950 space-y-6">
+                <h3 className="text-4xl font-black">🚨 Emergency Quick Support</h3>
+                <p className="text-2xl font-bold">If you feel dizzy, short of breath, or experienced a fall, stop immediately and seek assistance:</p>
+                {settings.emergencyContactPhone ? (
+                  <a href={`tel:${settings.emergencyContactPhone}`} className="block w-full text-center bg-red-700 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-red-900">
+                    📞 Call {settings.emergencyContactName || 'Emergency Contact'} ({settings.emergencyContactPhone})
+                  </a>
+                ) : (
+                  <p className="text-2xl font-bold bg-white p-4 rounded-xl border-2 border-red-400">
+                    No emergency contact telephone number has been saved in your Settings yet.
+                  </p>
+                )}
+                <button onClick={() => setShowInSessionEmergencyAlert(false)} className="w-full bg-slate-800 text-white font-bold text-2xl py-4 rounded-xl">
+                  Dismiss Emergency Notice
+                </button>
+              </div>
+            )}
+
             <h2 className="text-5xl font-extrabold text-center">{timerExercise.name}</h2>
+
+            {/* PHASE INDICATOR (CDC WARMUP -> ACTIVE -> COOLDOWN) */}
+            <div className="flex justify-center gap-4 text-center">
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'warmup' ? 'bg-yellow-400 text-black border-yellow-600' : 'opacity-40 border-current'}`}>
+                1. Dynamic Warm-Up (2 min)
+              </span>
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'active' ? 'bg-blue-600 text-white border-blue-900' : 'opacity-40 border-current'}`}>
+                2. Main Routine
+              </span>
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'cooldown' ? 'bg-green-600 text-white border-green-900' : 'opacity-40 border-current'}`}>
+                3. Cool Down (2 min)
+              </span>
+            </div>
             
             <div className={`p-8 rounded-2xl space-y-6 border-8 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'border-yellow-500 bg-yellow-50'}`}>
               <h3 className="text-4xl font-extrabold">⚠️ Mandatory Safety Check</h3>
@@ -436,6 +552,42 @@ export default function FitnessPlanner() {
               </div>
             </div>
 
+            {/* CDC INTENSITY & UN RPE EXERTION CONFIGURATION */}
+            <div className={`p-8 rounded-2xl border-4 space-y-6 ${subCardClass}`}>
+              <h3 className="text-3xl font-extrabold">CDC Intensity & Effort Level</h3>
+              
+              <div>
+                <label className="block text-2xl font-bold mb-3">CDC Intensity Selection:</label>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setCurrentIntensity('moderate')} 
+                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${currentIntensity === 'moderate' ? btnClass : 'bg-transparent border-current'}`}
+                  >
+                    🚶 Moderate (1x CDC Credit)
+                  </button>
+                  <button 
+                    onClick={() => setCurrentIntensity('vigorous')} 
+                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${currentIntensity === 'vigorous' ? btnClass : 'bg-transparent border-current'}`}
+                  >
+                    🏃 Vigorous (2x CDC Credit)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-2xl font-bold mb-2">UN Effort Level (RPE Scale 1 to 10): {currentRpe}</label>
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="10" 
+                  value={currentRpe} 
+                  onChange={e => setCurrentRpe(Number(e.target.value))}
+                  className="w-full h-8 bg-slate-300 rounded-lg cursor-pointer"
+                />
+                <p className="text-xl opacity-80 mt-1">1 = Very Easy, 5 = Moderate Effort, 10 = Maximum Exertion</p>
+              </div>
+            </div>
+
             <div className={`text-center p-10 rounded-2xl border-4 ${subCardClass}`}>
               <div className="text-8xl font-black mb-10 tracking-wider">
                 {Math.floor(secondsRemaining / 60).toString().padStart(2, '0')}:{(secondsRemaining % 60).toString().padStart(2, '0')}
@@ -446,7 +598,7 @@ export default function FitnessPlanner() {
                     alert("Please verify all three safety precautions first.");
                     return;
                   }
-                  if (!timerActive && settings.audioPrompts) speakText(`Starting ${timerExercise.name}`);
+                  if (!timerActive && settings.audioPrompts) speakText(`Starting ${timerPhase} for ${timerExercise.name}`);
                   setTimerActive(!timerActive);
                 }}
                 className={`w-full py-8 text-4xl font-extrabold rounded-2xl border-8 ${
@@ -455,7 +607,7 @@ export default function FitnessPlanner() {
                     : 'bg-green-600 text-white border-green-800'
                 }`}
               >
-                {timerActive ? '⏸ Pause Timer' : '▶️ Start Exercise Timer'}
+                {timerActive ? '⏸ Pause Timer' : `▶️ Start ${timerPhase.toUpperCase()} Timer`}
               </button>
             </div>
 
@@ -475,19 +627,19 @@ export default function FitnessPlanner() {
 
         {/* SCREEN: PROGRESS */}
         {currentScreen === 'progress' && (
-          <div className={`${cardClass} p-8 rounded-2xl space-y-12`}>
+          <div className={`${cardClass} p-8 rounded-2xl space-y-12 print:border-none print:shadow-none`}>
             <div>
               <h2 className="text-4xl font-extrabold mb-4">CDC & UN Goal Dashboard</h2>
               <p className="text-xl opacity-80 mb-8">Aligned with CDC guidelines for Adults 65+ and UN SDG Target 3.4 for Healthy Aging.</p>
               
               <div className="space-y-8">
-                {/* Aerobic Goal */}
+                {/* Aerobic Goal with CDC Vigorous Multiplier Multiplier */}
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
                   <h3 className="text-3xl font-extrabold mb-2">1. Aerobic Activity (CDC Target)</h3>
-                  <p className="text-2xl mb-4">Goal: At least 150 Minutes / week</p>
-                  <p className="text-2xl mb-4 font-bold">Logged: {sumMinutesByCategory('aerobic')} minutes</p>
+                  <p className="text-2xl mb-4">Goal: At least 150 Moderate Minutes / week (Vigorous minutes count double)</p>
+                  <p className="text-2xl mb-4 font-bold">Weighted CDC Credit Logged: {calculateCdcAerobicCredit()} / 150 minutes</p>
                   <div className="w-full bg-zinc-300 dark:bg-zinc-700 h-10 rounded-full border-4 border-current overflow-hidden">
-                    <div className="bg-blue-600 h-full transition-all" style={{ width: `${Math.min((sumMinutesByCategory('aerobic') / 150) * 100, 100)}%` }}></div>
+                    <div className="bg-blue-600 h-full transition-all" style={{ width: `${Math.min((calculateCdcAerobicCredit() / 150) * 100, 100)}%` }}></div>
                   </div>
                 </div>
 
@@ -508,11 +660,16 @@ export default function FitnessPlanner() {
             </div>
 
             <div className="border-t-4 border-current pt-10">
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 print:hidden">
                 <h2 className="text-4xl font-extrabold">Logs for {selectedDate}</h2>
-                <button onClick={downloadMyLogsData} className={`font-bold text-2xl px-8 py-4 rounded-xl border-4 ${btnClass} w-full sm:w-auto`}>
-                  📥 Download Report
-                </button>
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <button onClick={printDoctorSummary} className={`font-bold text-2xl px-6 py-4 rounded-xl border-4 ${subCardClass} flex-1 sm:flex-none`}>
+                    🖨️ Print Doctor Report
+                  </button>
+                  <button onClick={downloadMyLogsData} className={`font-bold text-2xl px-8 py-4 rounded-xl border-4 ${btnClass} flex-1 sm:flex-none`}>
+                    📥 Download CSV
+                  </button>
+                </div>
               </div>
 
               {logs.filter(l => l.date === selectedDate).length === 0 ? (
@@ -525,9 +682,14 @@ export default function FitnessPlanner() {
                     <div key={log.id} className={`${subCardClass} p-8 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6`}>
                       <div className="text-center sm:text-left">
                         <h4 className="text-3xl font-extrabold mb-2">{log.name}</h4>
-                        <p className="text-2xl opacity-90">Duration: {log.minutes} Minutes ({log.category})</p>
+                        <p className="text-2xl opacity-90">
+                          Duration: {log.minutes} Minutes ({log.category})
+                        </p>
+                        <p className="text-xl font-bold mt-1 text-blue-600 dark:text-yellow-400">
+                          Intensity: {log.intensity || 'moderate'} | Effort (RPE): {log.rpeScore || 5}/10
+                        </p>
                       </div>
-                      <button onClick={() => setLogs(prev => prev.filter(item => item.id !== log.id))} className="bg-red-700 text-white border-4 border-red-900 font-extrabold text-2xl px-8 py-4 rounded-xl w-full sm:w-auto">
+                      <button onClick={() => setLogs(prev => prev.filter(item => item.id !== log.id))} className="bg-red-700 text-white border-4 border-red-900 font-extrabold text-2xl px-8 py-4 rounded-xl w-full sm:w-auto print:hidden">
                         Delete
                       </button>
                     </div>
@@ -553,6 +715,24 @@ export default function FitnessPlanner() {
                 <input type="checkbox" className="w-12 h-12 accent-blue-600" checked={currentDrankWater} onChange={e => setCurrentDrankWater(e.target.checked)} />
                 <span className="text-3xl font-bold">I maintained adequate hydration.</span>
               </label>
+            </div>
+
+            {/* UN SDG 3 FALL RISK PREVENTATIVE INDICATOR */}
+            <div className={`p-8 rounded-2xl border-4 space-y-4 ${subCardClass}`}>
+              <h3 className="text-3xl font-bold">UN SDG 3 Fall Risk & Balance Assessment</h3>
+              <label className="block text-2xl font-bold">How confident did you feel in your balance today? ({currentBalanceConfidence} / 5)</label>
+              <input 
+                type="range" 
+                min="1" 
+                max="5" 
+                value={currentBalanceConfidence} 
+                onChange={e => setCurrentBalanceConfidence(Number(e.target.value))}
+                className="w-full h-8 bg-slate-300 rounded-lg cursor-pointer"
+              />
+              <div className="flex justify-between text-xl font-bold opacity-80">
+                <span>1 = Unsteady / High Risk</span>
+                <span>5 = Very Confident / Steady</span>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -585,7 +765,7 @@ export default function FitnessPlanner() {
             <div className={`${subCardClass} p-6 rounded-xl space-y-4`}>
               <h3 className="text-3xl font-bold">🏥 CDC Physical Activity Guidelines</h3>
               <ul className="list-disc pl-8 text-2xl space-y-2">
-                <li>150+ minutes per week of moderate-intensity aerobic activity.</li>
+                <li>150+ minutes per week of moderate-intensity aerobic activity (or 75 minutes of vigorous exercise).</li>
                 <li>At least 2 days per week of strength building for major muscle groups.</li>
                 <li>At least 3 days per week of multi-component balance exercises.</li>
               </ul>
@@ -627,7 +807,7 @@ export default function FitnessPlanner() {
 
             {/* Visual & Accessibility */}
             <div className="border-t-4 border-current pt-10 space-y-6">
-              <h3 className="text-3xl font-bold">Display & Reading Settings</h3>
+              <h3 className="text-3xl font-bold">Display & Feedback Settings</h3>
               
               <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
                 <input 
@@ -665,6 +845,16 @@ export default function FitnessPlanner() {
                   onChange={e => setSettings(p => ({...p, audioPrompts: e.target.checked}))}
                 />
                 <span className="text-3xl font-bold">Voice Assistance & Audio Cues</span>
+              </label>
+
+              <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
+                <input 
+                  type="checkbox" 
+                  className="w-12 h-12 accent-yellow-400"
+                  checked={settings.hapticFeedback}
+                  onChange={e => setSettings(p => ({...p, hapticFeedback: e.target.checked}))}
+                />
+                <span className="text-3xl font-bold">Haptic Device Vibrations</span>
               </label>
             </div>
 
