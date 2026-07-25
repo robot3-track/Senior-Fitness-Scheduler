@@ -332,7 +332,7 @@ export default function FitnessPlanner() {
                 <span className="text-sm uppercase tracking-wider font-extrabold text-blue-600 dark:text-yellow-400">CDC & UN SDG 3 Alignment</span>
                 <h3 className="text-2xl font-bold mt-1">Healthy Aging & Fall Prevention Standards</h3>
               </div>
-              <span className="text-3xl">🇺🇳 🏥 ➔</span>
+              <span className="text-3xl"> UN SDG Goals / CDC Guidelines ➔</span>
             </button>
 
             <h2 className="text-3xl font-bold pt-2">Step 2: What would you like to do?</h2>
