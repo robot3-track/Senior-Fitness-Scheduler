@@ -10,7 +10,6 @@ interface LogItem {
   name: string;
   minutes: number;
   category: 'aerobic' | 'strength' | 'balance';
-  // --- ADDED CDC INTENSITY & UN RPE METRICS ---
   intensity: 'moderate' | 'vigorous'; // CDC calculates 1 min vigorous = 2 mins moderate credit
   rpeScore: number; // UN Decade of Healthy Ageing exertion tracking (Borg Scale 1-10)
 }
@@ -20,13 +19,13 @@ interface DayNote {
   notesText: string;
   feltGood: boolean;
   drankWater: boolean;
-  // --- ADDED FALL RISK TRACKING ---
   balanceConfidenceScore: number; // Fall risk indicator rating (1-5) for UN SDG 3.4
 }
 
 interface UserSettings {
   emergencyContactName: string;
   emergencyContactPhone: string;
+  emergencyWebUrl: string; // Online healthcare / emergency portal link
   highContrastMode: boolean;
   fontSize: 'normal' | 'large';
   audioPrompts: boolean;
@@ -37,14 +36,14 @@ interface UserSettings {
 type ActiveScreen = 'menu' | 'exercises' | 'timer' | 'progress' | 'notes' | 'settings' | 'sdgInfo';
 
 export default function FitnessPlanner() {
-  // --- CORE STATE, the main state for users ---
+  // --- CORE STATE ---
   const [userEmail, setUserEmail] = useState('');
   const [authEmailInput, setAuthEmailInput] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>('menu');
 
-  // --- DATA STATES, for tracking memory ---
+  // --- DATA STATES ---
   const [calendarDays] = useState(() => getWeekDates());
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = calendarDays.find(d => d.isToday);
@@ -52,9 +51,12 @@ export default function FitnessPlanner() {
   });
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [dailyNotes, setDailyNotes] = useState<DayNote[]>([]);
+  
+  // --- USER SETTINGS WITH AUTOMATIC 911 & ONLINE HEALTHCARE DEFAULT ---
   const [settings, setSettings] = useState<UserSettings>({
-    emergencyContactName: '',
+    emergencyContactName: 'Personal Caregiver / Doctor',
     emergencyContactPhone: '',
+    emergencyWebUrl: 'https://www.emergencyprofile.org', // Default official 911/RapidSOS health profile portal
     highContrastMode: false,
     fontSize: 'large',
     audioPrompts: true,
@@ -75,11 +77,11 @@ export default function FitnessPlanner() {
   const [timerPhase, setTimerPhase] = useState<'warmup' | 'active' | 'cooldown'>('warmup');
   const [showInSessionEmergencyAlert, setShowInSessionEmergencyAlert] = useState(false);
 
-  // --- NOTES STATES (make sure to keep this private)---
+  // --- NOTES STATES ---
   const [currentNoteText, setCurrentNoteText] = useState('');
-  const [currentFeltGood, setCurrentFeltGood] = useState(true); // make "feel good" automatically good for positivity, which I hope the user never clicks on false..
+  const [currentFeltGood, setCurrentFeltGood] = useState(true);
   const [currentDrankWater, setCurrentDrankWater] = useState(false);
-  const [currentBalanceConfidence, setCurrentBalanceConfidence] = useState(4); // Default strong balance confidence score
+  const [currentBalanceConfidence, setCurrentBalanceConfidence] = useState(4);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -103,7 +105,10 @@ export default function FitnessPlanner() {
     if (storedNotes) setDailyNotes(JSON.parse(storedNotes));
 
     const storedSettings = localStorage.getItem(`fit_settings_${profileKey}`);
-    if (storedSettings) setSettings(JSON.parse(storedSettings));
+    if (storedSettings) {
+      const parsed = JSON.parse(storedSettings);
+      setSettings(prev => ({ ...prev, ...parsed }));
+    }
   }, []);
 
   // --- AUTO-SAVE ---
@@ -141,7 +146,7 @@ export default function FitnessPlanner() {
       try {
         window.navigator.vibrate(duration as VibratePattern);
       } catch (e) {
-        // fallback for older browsers or restricted environments or else typescript errors appear
+        // Fallback for restricted environments
       }
     }
   };
@@ -150,7 +155,7 @@ export default function FitnessPlanner() {
     if (!settings.audioPrompts || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   };
 
@@ -167,19 +172,16 @@ export default function FitnessPlanner() {
       }, 1000);
     } else if (secondsRemaining === 0 && timerActive) {
       if (timerPhase === 'warmup') {
-        // Transition from Warmup to Main Routine
         triggerHaptic(400);
         setTimerPhase('active');
         if (timerExercise) setSecondsRemaining(timerExercise.minutes * 60);
         speakText("Warm up complete. Starting main exercise now.");
       } else if (timerPhase === 'active') {
-        // Transition from Main Routine to Cool Down
         triggerHaptic(400);
         setTimerPhase('cooldown');
-        setSecondsRemaining(120); // 2 minute cool down
+        setSecondsRemaining(120);
         speakText("Exercise portion completed. Let us cool down safely.");
       } else if (timerPhase === 'cooldown') {
-        // Entire Session Finalized
         setTimerActive(false);
         triggerHaptic([200, 100, 200]);
         if (timerExercise) {
@@ -233,7 +235,7 @@ export default function FitnessPlanner() {
   const startExerciseFlow = (ex: Exercise) => {
     setTimerExercise(ex);
     setTimerPhase('warmup');
-    setSecondsRemaining(120); // Mandatory 2-minute dynamic warm-up
+    setSecondsRemaining(120);
     setTimerActive(false);
     setSafetyCleared({ clearSpace: false, hasWater: false, goodShoes: false });
     setCurrentIntensity('moderate');
@@ -256,7 +258,6 @@ export default function FitnessPlanner() {
     setCurrentScreen('menu');
   };
 
-  // --- DOCTOR & CLINICAL REPORT CSV EXPORT ---
   const downloadMyLogsData = () => {
     if (logs.length === 0) {
       alert("You have no exercises saved yet to download.");
@@ -276,15 +277,13 @@ export default function FitnessPlanner() {
     document.body.removeChild(link);
   };
 
-  // --- PRINT / CLINICAL SUMMARY GENERATOR ---
   const printDoctorSummary = () => {
     if (typeof window !== 'undefined') {
       window.print();
     }
   };
 
-  // --- ACCURATE CDC ALGORITHMIC PROGRESS CALCULATORS ---
-  // CDC formula: 1 min Vigorous = 2 mins Moderate credit towards 150 min target
+  // --- CDC PROGRESS CALCULATORS ---
   const calculateCdcAerobicCredit = () => {
     return logs.filter(l => l.category === 'aerobic').reduce((sum, current) => {
       const multiplier = current.intensity === 'vigorous' ? 2 : 1;
@@ -292,19 +291,13 @@ export default function FitnessPlanner() {
     }, 0);
   };
 
-  const sumMinutesByCategory = (category: string) => 
-    logs.filter(l => l.category === category).reduce((sum, current) => sum + current.minutes, 0);
-
-  // Calculates distinct days logged for strength/balance to match CDC specs
   const countDaysByCategory = (category: string) => {
     const dates = logs.filter(l => l.category === category).map(l => l.date);
     return new Set(dates).size;
   };
 
-  // --- DYNAMIC CONTRAST & ACCESSIBILITY STYLING ---
+  // --- STYLING ---
   const fontSizeClass = settings.fontSize === 'large' ? 'text-2xl' : 'text-xl';
-  
-  // Dark mode vs high contrast classes
   const isDark = settings.highContrastMode;
   const bgClass = isDark ? 'bg-black text-yellow-300' : 'bg-slate-50 text-slate-900';
   const cardClass = isDark ? 'bg-zinc-950 border-4 border-yellow-400 text-yellow-300' : 'bg-white border-4 border-slate-300 text-slate-900';
@@ -355,7 +348,7 @@ export default function FitnessPlanner() {
     <div className={`min-h-screen p-4 md:p-8 font-sans ${fontSizeClass} ${bgClass}`}>
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* Header */}
+        {/* Header with Automatic 911 Call Trigger */}
         <header className={`${cardClass} p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6 shadow-sm print:hidden`}>
           <div>
             <h1 className="text-4xl font-extrabold">Health Station</h1>
@@ -363,15 +356,28 @@ export default function FitnessPlanner() {
               {isGuestMode ? "Guest Profile" : `Profile: ${userEmail}`}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
+            {/* AUTOMATIC 911 MOBILE DIALER BUTTON */}
+            <a 
+              href="tel:911" 
+              className="bg-red-700 text-white font-extrabold px-6 py-4 rounded-xl text-2xl text-center border-4 border-red-950 hover:bg-red-800 flex items-center gap-2 shadow-lg"
+            >
+              🚨 Call 911
+            </a>
+
+            {/* PERSONAL CONTACT BUTTON */}
             {settings.emergencyContactPhone && (
-              <a href={`tel:${settings.emergencyContactPhone}`} className="bg-red-600 text-white font-bold px-6 py-4 rounded-xl text-xl text-center border-4 border-red-900 hover:bg-red-700">
-                🚨 Call {settings.emergencyContactName || 'Emergency'}
+              <a 
+                href={`tel:${settings.emergencyContactPhone}`} 
+                className="bg-amber-600 text-white font-bold px-5 py-4 rounded-xl text-xl text-center border-4 border-amber-900 hover:bg-amber-700"
+              >
+                📞 {settings.emergencyContactName || 'Caregiver'}
               </a>
             )}
+
             {currentScreen !== 'menu' && (
-              <button onClick={() => setCurrentScreen('menu')} className={`font-bold px-8 py-4 rounded-xl text-2xl ${subCardClass}`}>
-                🔙 Main Menu
+              <button onClick={() => setCurrentScreen('menu')} className={`font-bold px-6 py-4 rounded-xl text-xl ${subCardClass}`}>
+                🔙 Menu
               </button>
             )}
           </div>
@@ -428,7 +434,7 @@ export default function FitnessPlanner() {
 
               <button onClick={() => setCurrentScreen('settings')} className={`p-10 rounded-2xl text-left border-4 ${subCardClass}`}>
                 <h3 className="text-4xl font-extrabold mb-2">⚙️ Settings</h3>
-                <p className="text-2xl opacity-90">Text size, voice prompts & contacts.</p>
+                <p className="text-2xl opacity-90">Text size, voice prompts & emergency contacts.</p>
               </button>
             </div>
 
@@ -485,32 +491,64 @@ export default function FitnessPlanner() {
           </div>
         )}
 
-        {/* SCREEN: TIMER WITH IN-SESSION FLOATING SAFETY BUTTON & CDC INTENSITY SETTINGS */}
+        {/* SCREEN: TIMER WITH IN-SESSION FLOATING SAFETY BUTTON & MOBILE EMERGENCY LINKS */}
         {currentScreen === 'timer' && timerExercise && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10 relative`}>
-            {/* FLOATING IN-SESSION SAFETY BUTTON FOR SENIOR EMERGENCIES */}
+            {/* FLOATING EMERGENCY ASSISTANCE BUTTON */}
             <div className="sticky top-4 z-50 flex justify-end">
               <button 
                 onClick={() => setShowInSessionEmergencyAlert(!showInSessionEmergencyAlert)} 
                 className="bg-red-600 text-white font-extrabold px-8 py-4 rounded-full text-2xl border-4 border-red-950 shadow-2xl hover:bg-red-700 transition-transform active:scale-95 animate-pulse"
               >
-                🚨 Need Help? Emergency Assistance
+                🚨 Emergency Assistance
               </button>
             </div>
 
             {showInSessionEmergencyAlert && (
               <div className="p-8 rounded-2xl border-8 border-red-600 bg-red-100 text-red-950 space-y-6">
-                <h3 className="text-4xl font-black">🚨 Emergency Quick Support</h3>
-                <p className="text-2xl font-bold">If you feel dizzy, short of breath, or experienced a fall, stop immediately and seek assistance:</p>
-                {settings.emergencyContactPhone ? (
-                  <a href={`tel:${settings.emergencyContactPhone}`} className="block w-full text-center bg-red-700 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-red-900">
-                    📞 Call {settings.emergencyContactName || 'Emergency Contact'} ({settings.emergencyContactPhone})
+                <h3 className="text-4xl font-black">🚨 Emergency Quick Actions</h3>
+                <p className="text-2xl font-bold">If you feel dizzy, short of breath, or experienced a fall, stop immediately:</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* DIRECT 911 CALL BUTTON (Triggers Android / iOS Phone App) */}
+                  <a 
+                    href="tel:911" 
+                    className="block text-center bg-red-700 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-red-950 hover:bg-red-800"
+                  >
+                    📞 Call 911 Directly
                   </a>
-                ) : (
-                  <p className="text-2xl font-bold bg-white p-4 rounded-xl border-2 border-red-400">
-                    No emergency contact telephone number has been saved in your Settings yet.
-                  </p>
+
+                  {/* DIRECT TEXT 911 BUTTON (Triggers Android / iOS Messaging App) */}
+                  <a 
+                    href="sms:911" 
+                    className="block text-center bg-zinc-800 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-black hover:bg-zinc-900"
+                  >
+                    💬 Text 911 (SMS)
+                  </a>
+                </div>
+
+                {/* PERSONAL EMERGENCY CONTACT */}
+                {settings.emergencyContactPhone && (
+                  <a 
+                    href={`tel:${settings.emergencyContactPhone}`} 
+                    className="block w-full text-center bg-amber-600 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-amber-900 hover:bg-amber-700"
+                  >
+                    📞 Call {settings.emergencyContactName || 'Caregiver'} ({settings.emergencyContactPhone})
+                  </a>
                 )}
+
+                {/* ONLINE EMERGENCY / HEALTHCARE PORTAL LINK */}
+                {settings.emergencyWebUrl && (
+                  <a 
+                    href={settings.emergencyWebUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full text-center bg-blue-700 text-white font-extrabold text-2xl py-5 rounded-2xl border-4 border-blue-900 hover:bg-blue-800"
+                  >
+                    🌐 Open Online Emergency Health Portal ↗
+                  </a>
+                )}
+
                 <button onClick={() => setShowInSessionEmergencyAlert(false)} className="w-full bg-slate-800 text-white font-bold text-2xl py-4 rounded-xl">
                   Dismiss Emergency Notice
                 </button>
@@ -519,7 +557,7 @@ export default function FitnessPlanner() {
 
             <h2 className="text-5xl font-extrabold text-center">{timerExercise.name}</h2>
 
-            {/* PHASE INDICATOR (CDC WARMUP -> ACTIVE -> COOLDOWN) */}
+            {/* PHASE INDICATOR */}
             <div className="flex justify-center gap-4 text-center">
               <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'warmup' ? 'bg-yellow-400 text-black border-yellow-600' : 'opacity-40 border-current'}`}>
                 1. Dynamic Warm-Up (2 min)
@@ -633,7 +671,6 @@ export default function FitnessPlanner() {
               <p className="text-xl opacity-80 mb-8">Aligned with CDC guidelines for Adults 65+ and UN SDG Target 3.4 for Healthy Aging.</p>
               
               <div className="space-y-8">
-                {/* Aerobic Goal with CDC Vigorous Multiplier Multiplier */}
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
                   <h3 className="text-3xl font-extrabold mb-2">1. Aerobic Activity (CDC Target)</h3>
                   <p className="text-2xl mb-4">Goal: At least 150 Moderate Minutes / week (Vigorous minutes count double)</p>
@@ -643,14 +680,12 @@ export default function FitnessPlanner() {
                   </div>
                 </div>
 
-                {/* Strength Goal */}
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
                   <h3 className="text-3xl font-extrabold mb-2">2. Muscle Strengthening (CDC Target)</h3>
                   <p className="text-2xl mb-2">Goal: At least 2 days / week</p>
                   <p className="text-2xl font-bold">Logged: {countDaysByCategory('strength')} unique days active</p>
                 </div>
 
-                {/* Balance Training */}
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
                   <h3 className="text-3xl font-extrabold mb-2">3. Balance Training (CDC & UN SDG 3)</h3>
                   <p className="text-2xl mb-2">Goal: 3 days / week to reduce fall risks</p>
@@ -717,7 +752,6 @@ export default function FitnessPlanner() {
               </label>
             </div>
 
-            {/* UN SDG 3 FALL RISK PREVENTATIVE INDICATOR */}
             <div className={`p-8 rounded-2xl border-4 space-y-4 ${subCardClass}`}>
               <h3 className="text-3xl font-bold">UN SDG 3 Fall Risk & Balance Assessment</h3>
               <label className="block text-2xl font-bold">How confident did you feel in your balance today? ({currentBalanceConfidence} / 5)</label>
@@ -776,24 +810,30 @@ export default function FitnessPlanner() {
         {/* SCREEN: SETTINGS */}
         {currentScreen === 'settings' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10`}>
-            <h2 className="text-4xl font-extrabold border-b-4 border-current pb-6">Senior Access & Safety Settings</h2>
+            <h2 className="text-4xl font-extrabold border-b-4 border-current pb-6">Emergency & Safety Settings</h2>
             
-            {/* Emergency Contacts */}
+            {/* Automatic Emergency Contacts */}
             <div className="space-y-6">
-              <h3 className="text-3xl font-bold text-red-600 dark:text-red-400">🚨 Emergency Quick-Dial</h3>
+              <h3 className="text-3xl font-bold text-red-600 dark:text-red-400">🚨 Emergency Contact Setup</h3>
+              
+              <div className="p-6 rounded-2xl border-4 border-red-500 bg-red-50 text-red-950 font-bold space-y-2">
+                <p className="text-2xl">✅ Default System Emergency Contact: <strong>911 (US/National Dispatch)</strong></p>
+                <p className="text-xl opacity-90">Tapping "Call 911" or "Text 911" automatically opens the native Phone or SMS application on Android and mobile devices.</p>
+              </div>
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-2xl font-bold mb-2">Contact Label / Name:</label>
+                  <label className="block text-2xl font-bold mb-2">Personal Caregiver / Doctor Name:</label>
                   <input 
                     type="text" 
                     value={settings.emergencyContactName}
                     onChange={e => setSettings(p => ({...p, emergencyContactName: e.target.value}))}
                     className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
-                    placeholder="e.g. Caregiver, Doctor"
+                    placeholder="e.g. Dr. Smith / Daughter Jane"
                   />
                 </div>
                 <div>
-                  <label className="block text-2xl font-bold mb-2">Phone Number:</label>
+                  <label className="block text-2xl font-bold mb-2">Personal Emergency Phone Number:</label>
                   <input 
                     type="tel" 
                     value={settings.emergencyContactPhone}
@@ -801,6 +841,17 @@ export default function FitnessPlanner() {
                     className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
                     placeholder="1-800-555-0199"
                   />
+                </div>
+                <div>
+                  <label className="block text-2xl font-bold mb-2">Online Emergency / Telehealth Website URL:</label>
+                  <input 
+                    type="url" 
+                    value={settings.emergencyWebUrl}
+                    onChange={e => setSettings(p => ({...p, emergencyWebUrl: e.target.value}))}
+                    className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
+                    placeholder="https://www.emergencyprofile.org"
+                  />
+                  <p className="text-lg opacity-80 mt-1">Allows users to transmit health profiles or consult doctors online during emergencies.</p>
                 </div>
               </div>
             </div>
