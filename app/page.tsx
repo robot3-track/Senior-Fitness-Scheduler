@@ -90,6 +90,13 @@ export default function FitnessPlanner() {
   const [currentDrankWater, setCurrentDrankWater] = useState(false);
   const [currentBalanceConfidence, setCurrentBalanceConfidence] = useState(4);
 
+  // --- AUTO SCROLL TO TOP ON PAGE/SCREEN NAVIGATION ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentScreen]);
+
   // --- INITIALIZATION ---
   useEffect(() => {
     if (typeof window === 'undefined') return;
