@@ -58,7 +58,7 @@ export default function FitnessPlanner() {
     emergencyContactName: 'Personal Caregiver / Doctor',
     emergencyContactPhone: '',
     emergencyWebUrl: '',
-    medicalNotes: 'No known allergies. Condition: Hypertension. Blood Type: O+',
+    medicalNotes: 'No known allergies. Condition: N/A Blood Type: N/A',
     highContrastMode: false,
     fontSize: 'large',
     audioPrompts: true,
