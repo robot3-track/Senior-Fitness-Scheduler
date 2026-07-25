@@ -31,14 +31,14 @@ interface UserSettings {
 type ActiveScreen = 'menu' | 'exercises' | 'timer' | 'progress' | 'notes' | 'settings' | 'sdgInfo';
 
 export default function FitnessPlanner() {
-  // --- CORE STATE ---
+  // --- CORE STATE, the main state for users ---
   const [userEmail, setUserEmail] = useState('');
   const [authEmailInput, setAuthEmailInput] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>('menu');
 
-  // --- DATA STATES ---
+  // --- DATA STATES, for tracking memory ---
   const [calendarDays] = useState(() => getWeekDates());
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = calendarDays.find(d => d.isToday);
@@ -62,9 +62,9 @@ export default function FitnessPlanner() {
   const [timerActive, setTimerActive] = useState(false);
   const [safetyCleared, setSafetyCleared] = useState({ clearSpace: false, hasWater: false, goodShoes: false });
 
-  // --- NOTES STATES ---
+  // --- NOTES STATES (make sure to keep this private)---
   const [currentNoteText, setCurrentNoteText] = useState('');
-  const [currentFeltGood, setCurrentFeltGood] = useState(true);
+  const [currentFeltGood, setCurrentFeltGood] = useState(true); // make "feel good" automatically good for positivity, which I hope the user never clicks on false..
   const [currentDrankWater, setCurrentDrankWater] = useState(false);
 
   // --- INITIALIZATION ---
