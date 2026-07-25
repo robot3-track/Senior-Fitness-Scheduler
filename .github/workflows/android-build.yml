@@ -47,8 +47,12 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: Rename APK File
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/Senior-Fitness-App.apk
+
       - name: Upload APK Release Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: senior-fitness-scheduler-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Senior-Fitness-App-APK
+          path: android/app/build/outputs/apk/debug/Senior-Fitness-App.apk
