@@ -25,7 +25,8 @@ interface DayNote {
 interface UserSettings {
   emergencyContactName: string;
   emergencyContactPhone: string;
-  emergencyWebUrl: string; // Online healthcare / emergency portal link
+  emergencyWebUrl: string; // Optional Telehealth / Medical Web link
+  medicalNotes: string; // Local Medical ID (allergies, blood type, conditions)
   highContrastMode: boolean;
   fontSize: 'normal' | 'large';
   audioPrompts: boolean;
@@ -52,11 +53,12 @@ export default function FitnessPlanner() {
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [dailyNotes, setDailyNotes] = useState<DayNote[]>([]);
   
-  // --- USER SETTINGS WITH AUTOMATIC 911 & ONLINE HEALTHCARE DEFAULT ---
+  // --- USER SETTINGS WITH NO-SIGNUP LOCAL MEDICAL ID DEFAULT ---
   const [settings, setSettings] = useState<UserSettings>({
     emergencyContactName: 'Personal Caregiver / Doctor',
     emergencyContactPhone: '',
-    emergencyWebUrl: 'https://www.emergencyprofile.org', // Default official 911/RapidSOS health profile portal
+    emergencyWebUrl: '',
+    medicalNotes: 'No known allergies. Condition: Hypertension. Blood Type: O+',
     highContrastMode: false,
     fontSize: 'large',
     audioPrompts: true,
@@ -64,18 +66,19 @@ export default function FitnessPlanner() {
     hapticFeedback: true
   });
 
-  // --- EXERCISE & TIMER STATES ---
+  // --- EXERCISE, TIMER & EMERGENCY MODAL STATES ---
   const [selectedMuscles, setSelectedMuscles] = useState<string[]>([]);
   const [timerExercise, setTimerExercise] = useState<Exercise | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [safetyCleared, setSafetyCleared] = useState({ clearSpace: false, hasWater: false, goodShoes: false });
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [showMedicalCardModal, setShowMedicalCardModal] = useState(false);
   
   // --- WORKOUT INTENSITY & SAFETY FLOW STATES ---
   const [currentIntensity, setCurrentIntensity] = useState<'moderate' | 'vigorous'>('moderate');
   const [currentRpe, setCurrentRpe] = useState<number>(5);
   const [timerPhase, setTimerPhase] = useState<'warmup' | 'active' | 'cooldown'>('warmup');
-  const [showInSessionEmergencyAlert, setShowInSessionEmergencyAlert] = useState(false);
 
   // --- NOTES STATES ---
   const [currentNoteText, setCurrentNoteText] = useState('');
@@ -296,8 +299,13 @@ export default function FitnessPlanner() {
     return new Set(dates).size;
   };
 
-  // --- STYLING ---
-  const fontSizeClass = settings.fontSize === 'large' ? 'text-2xl' : 'text-xl';
+  // --- DYNAMIC FONT SCALE & STYLING CLASSES ---
+  const isLarge = settings.fontSize === 'large';
+  const fontSizeClass = isLarge ? 'text-2xl' : 'text-lg';
+  const headingClass = isLarge ? 'text-5xl font-extrabold' : 'text-3xl font-bold';
+  const subHeadingClass = isLarge ? 'text-3xl font-bold' : 'text-2xl font-semibold';
+  const bodyTextClass = isLarge ? 'text-2xl' : 'text-xl';
+  
   const isDark = settings.highContrastMode;
   const bgClass = isDark ? 'bg-black text-yellow-300' : 'bg-slate-50 text-slate-900';
   const cardClass = isDark ? 'bg-zinc-950 border-4 border-yellow-400 text-yellow-300' : 'bg-white border-4 border-slate-300 text-slate-900';
@@ -310,31 +318,31 @@ export default function FitnessPlanner() {
     return (
       <div className={`min-h-screen ${bgClass} flex items-center justify-center p-6 font-sans`}>
         <div className="max-w-2xl w-full space-y-8">
-          <h1 className="text-5xl font-extrabold text-center border-b-8 border-current pb-6">
+          <h1 className={`${headingClass} text-center border-b-8 border-current pb-6`}>
             Senior Health Station
           </h1>
           
           <div className={`${cardClass} p-10 rounded-2xl shadow-xl space-y-8`}>
-            <h2 className="text-3xl font-bold">1. Log In to Your Account</h2>
+            <h2 className={subHeadingClass}>1. Log In to Your Account</h2>
             <form onSubmit={handleSignIn} className="space-y-6">
-              <label className="block text-2xl font-bold">Your Email Address:</label>
+              <label className={`block ${subHeadingClass}`}>Your Email Address:</label>
               <input 
                 type="email" 
                 required 
                 placeholder="Type your email here..."
                 value={authEmailInput}
                 onChange={e => setAuthEmailInput(e.target.value)}
-                className={`w-full px-6 py-6 text-2xl rounded-xl ${inputClass}`}
+                className={`w-full px-6 py-6 ${bodyTextClass} rounded-xl ${inputClass}`}
               />
-              <button type="submit" className={`w-full font-extrabold text-3xl py-6 rounded-xl ${btnClass}`}>
+              <button type="submit" className={`w-full font-extrabold ${subHeadingClass} py-6 rounded-xl ${btnClass}`}>
                 Click Here to Log In
               </button>
             </form>
           </div>
 
           <div className="text-center pt-4">
-            <p className="text-2xl font-bold mb-6 opacity-80">Or use the app without an account:</p>
-            <button onClick={handleGuest} className={`w-full font-extrabold text-3xl py-6 rounded-xl shadow-md ${subCardClass}`}>
+            <p className={`${subHeadingClass} mb-6 opacity-80`}>Or use the app without an account:</p>
+            <button onClick={handleGuest} className={`w-full font-extrabold ${subHeadingClass} py-6 rounded-xl shadow-md ${subCardClass}`}>
               Continue as a Guest User
             </button>
           </div>
@@ -348,46 +356,134 @@ export default function FitnessPlanner() {
     <div className={`min-h-screen p-4 md:p-8 font-sans ${fontSizeClass} ${bgClass}`}>
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* Header with Automatic 911 Call Trigger */}
+        {/* Header with Standardized Emergency Button across ALL screens */}
         <header className={`${cardClass} p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6 shadow-sm print:hidden`}>
           <div>
-            <h1 className="text-4xl font-extrabold">Health Station</h1>
-            <p className="text-xl mt-2 font-medium opacity-90">
+            <h1 className={headingClass}>Health Station</h1>
+            <p className={`${bodyTextClass} mt-2 font-medium opacity-90`}>
               {isGuestMode ? "Guest Profile" : `Profile: ${userEmail}`}
             </p>
           </div>
           <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
-            {/* AUTOMATIC 911 MOBILE DIALER BUTTON */}
-            <a 
-              href="tel:911" 
-              className="bg-red-700 text-white font-extrabold px-6 py-4 rounded-xl text-2xl text-center border-4 border-red-950 hover:bg-red-800 flex items-center gap-2 shadow-lg"
+            {/* STANDARDIZED EMERGENCY BUTTON */}
+            <button 
+              onClick={() => setShowEmergencyModal(true)} 
+              className="bg-red-700 text-white font-extrabold px-6 py-4 rounded-xl border-4 border-red-950 hover:bg-red-800 flex items-center gap-2 shadow-lg"
             >
-              🚨 Call 911
-            </a>
-
-            {/* PERSONAL CONTACT BUTTON */}
-            {settings.emergencyContactPhone && (
-              <a 
-                href={`tel:${settings.emergencyContactPhone}`} 
-                className="bg-amber-600 text-white font-bold px-5 py-4 rounded-xl text-xl text-center border-4 border-amber-900 hover:bg-amber-700"
-              >
-                📞 {settings.emergencyContactName || 'Caregiver'}
-              </a>
-            )}
+              🚨 Emergency Contacts
+            </button>
 
             {currentScreen !== 'menu' && (
-              <button onClick={() => setCurrentScreen('menu')} className={`font-bold px-6 py-4 rounded-xl text-xl ${subCardClass}`}>
+              <button onClick={() => setCurrentScreen('menu')} className={`font-bold px-6 py-4 rounded-xl ${bodyTextClass} ${subCardClass}`}>
                 🔙 Menu
               </button>
             )}
           </div>
         </header>
 
+        {/* REUSABLE EMERGENCY MODAL (Home & Exercise pages) */}
+        {showEmergencyModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div className={`max-w-2xl w-full p-8 rounded-2xl border-8 border-red-600 ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-slate-900'} space-y-6 max-h-[90vh] overflow-y-auto`}>
+              <div className="flex justify-between items-center border-b-4 border-red-600 pb-4">
+                <h3 className={`${headingClass} text-red-600`}>🚨 Emergency Quick Actions</h3>
+                <button onClick={() => setShowEmergencyModal(false)} className="text-3xl font-bold px-4 py-2 bg-slate-200 text-black rounded-lg">✕</button>
+              </div>
+
+              <p className={bodyTextClass}>
+                If you feel dizzy, short of breath, or experienced a fall, stop immediately:
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a 
+                  href="tel:911" 
+                  className={`block text-center bg-red-700 text-white font-extrabold ${subHeadingClass} py-6 rounded-2xl border-4 border-red-950 hover:bg-red-800`}
+                >
+                  📞 Call 911 Directly
+                </a>
+
+                <a 
+                  href="sms:911" 
+                  className={`block text-center bg-zinc-800 text-white font-extrabold ${subHeadingClass} py-6 rounded-2xl border-4 border-black hover:bg-zinc-900`}
+                >
+                  💬 Text 911 (SMS)
+                </a>
+              </div>
+
+              {settings.emergencyContactPhone && (
+                <a 
+                  href={`tel:${settings.emergencyContactPhone}`} 
+                  className={`block w-full text-center bg-amber-600 text-white font-extrabold ${subHeadingClass} py-6 rounded-2xl border-4 border-amber-900 hover:bg-amber-700`}
+                >
+                  📞 Call {settings.emergencyContactName || 'Caregiver'} ({settings.emergencyContactPhone})
+                </a>
+              )}
+
+              {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD BUTTON */}
+              <button 
+                onClick={() => { setShowEmergencyModal(false); setShowMedicalCardModal(true); }}
+                className={`block w-full text-center bg-blue-700 text-white font-extrabold ${subHeadingClass} py-5 rounded-2xl border-4 border-blue-900 hover:bg-blue-800`}
+              >
+                🪪 View On-Screen Medical ID (No Signup Needed)
+              </button>
+
+              {settings.emergencyWebUrl && (
+                <a 
+                  href={settings.emergencyWebUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={`block w-full text-center bg-slate-700 text-white font-bold ${bodyTextClass} py-4 rounded-2xl border-4 border-slate-900 hover:bg-slate-800`}
+                >
+                  🌐 External Healthcare Web Portal ↗
+                </a>
+              )}
+
+              <button onClick={() => setShowEmergencyModal(false)} className={`w-full bg-slate-800 text-white font-bold ${bodyTextClass} py-4 rounded-xl`}>
+                Dismiss Emergency Notice
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD MODAL */}
+        {showMedicalCardModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div className={`max-w-2xl w-full p-8 rounded-2xl border-8 border-blue-600 ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-slate-900'} space-y-6 max-h-[90vh] overflow-y-auto`}>
+              <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
+                <h3 className={`${headingClass} text-blue-600`}>🪪 Emergency Medical Profile</h3>
+                <button onClick={() => setShowMedicalCardModal(false)} className="text-3xl font-bold px-4 py-2 bg-slate-200 text-black rounded-lg">✕</button>
+              </div>
+
+              <div className={`${subCardClass} p-6 rounded-xl space-y-4`}>
+                <p className={bodyTextClass}><strong>User Profile:</strong> {isGuestMode ? 'Guest User' : userEmail}</p>
+                <p className={bodyTextClass}><strong>Emergency Contact:</strong> {settings.emergencyContactName || 'None listed'} {settings.emergencyContactPhone ? `(${settings.emergencyContactPhone})` : ''}</p>
+                <div className="border-t-2 border-current pt-4">
+                  <p className={`${subHeadingClass} mb-2`}>Medical Notes & Conditions:</p>
+                  <p className={bodyTextClass}>{settings.medicalNotes || 'No local medical notes saved.'}</p>
+                </div>
+              </div>
+
+              <p className="text-sm opacity-80 text-center">
+                ℹ️ This information is stored privately on your device. Show this screen to first responders if necessary. No external accounts or online registrations are required.
+              </p>
+
+              <div className="flex gap-4">
+                <button onClick={() => { setShowMedicalCardModal(false); setCurrentScreen('settings'); }} className={`flex-1 bg-amber-600 text-white font-bold ${bodyTextClass} py-4 rounded-xl`}>
+                  ✏️ Edit Profile Info
+                </button>
+                <button onClick={() => setShowMedicalCardModal(false)} className={`flex-1 bg-slate-800 text-white font-bold ${bodyTextClass} py-4 rounded-xl`}>
+                  Close Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* SCREEN: MENU */}
         {currentScreen === 'menu' && (
           <div className="space-y-8">
             <div className={`${cardClass} p-8 rounded-2xl`}>
-              <h2 className="text-3xl font-bold mb-6">Step 1: Choose a Date</h2>
+              <h2 className={`${subHeadingClass} mb-6`}>Step 1: Choose a Date</h2>
               <div className="flex overflow-x-auto gap-4 pb-4">
                 {calendarDays.map(day => (
                   <button
@@ -399,8 +495,8 @@ export default function FitnessPlanner() {
                         : subCardClass
                     }`}
                   >
-                    <span className="text-2xl font-bold">{day.dayName}</span>
-                    <span className="text-4xl font-extrabold mt-2">{day.dayOfMonth}</span>
+                    <span className={`${bodyTextClass} font-bold`}>{day.dayName}</span>
+                    <span className={`${subHeadingClass} mt-2`}>{day.dayOfMonth}</span>
                   </button>
                 ))}
               </div>
@@ -410,36 +506,36 @@ export default function FitnessPlanner() {
             <button onClick={() => setCurrentScreen('sdgInfo')} className={`w-full p-6 rounded-2xl border-4 text-left flex justify-between items-center ${isDark ? 'border-yellow-400 bg-zinc-900' : 'border-blue-600 bg-blue-50'}`}>
               <div>
                 <span className="text-sm uppercase tracking-wider font-extrabold text-blue-600 dark:text-yellow-400">CDC & UN SDG 3 Alignment</span>
-                <h3 className="text-2xl font-bold mt-1">Healthy Aging & Fall Prevention Standards</h3>
+                <h3 className={`${subHeadingClass} mt-1`}>Healthy Aging & Fall Prevention Standards</h3>
               </div>
-              <span className="text-3xl"> UN SDG Goals / CDC Guidelines ➔</span>
+              <span className={subHeadingClass}> UN SDG Goals / CDC Guidelines ➔</span>
             </button>
 
-            <h2 className="text-3xl font-bold pt-2">Step 2: What would you like to do?</h2>
+            <h2 className={`${subHeadingClass} pt-2`}>Step 2: What would you like to do?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button onClick={() => setCurrentScreen('exercises')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-blue-50 border-blue-600 hover:bg-blue-100'}`}>
-                <h3 className="text-4xl font-extrabold mb-2">🏋️ Exercises</h3>
-                <p className="text-2xl opacity-90">CDC-guided routines & active timers.</p>
+                <h3 className={`${subHeadingClass} mb-2`}>🏋️ Exercises</h3>
+                <p className={`${bodyTextClass} opacity-90`}>CDC-guided routines & active timers.</p>
               </button>
               
               <button onClick={() => setCurrentScreen('progress')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-green-50 border-green-600 hover:bg-green-100'}`}>
-                <h3 className="text-4xl font-extrabold mb-2">📊 My Progress</h3>
-                <p className="text-2xl opacity-90">Track CDC targets & UN SDG 3 status.</p>
+                <h3 className={`${subHeadingClass} mb-2`}>📊 My Progress</h3>
+                <p className={`${bodyTextClass} opacity-90`}>Track CDC targets & UN SDG 3 status.</p>
               </button>
 
               <button onClick={() => setCurrentScreen('notes')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-yellow-50 border-yellow-600 hover:bg-yellow-100'}`}>
-                <h3 className="text-4xl font-extrabold mb-2">📝 Daily Notes</h3>
-                <p className="text-2xl opacity-90">Track hydration & wellness state.</p>
+                <h3 className={`${subHeadingClass} mb-2`}>📝 Daily Notes</h3>
+                <p className={`${bodyTextClass} opacity-90`}>Track hydration & wellness state.</p>
               </button>
 
               <button onClick={() => setCurrentScreen('settings')} className={`p-10 rounded-2xl text-left border-4 ${subCardClass}`}>
-                <h3 className="text-4xl font-extrabold mb-2">⚙️ Settings</h3>
-                <p className="text-2xl opacity-90">Text size, voice prompts & emergency contacts.</p>
+                <h3 className={`${subHeadingClass} mb-2`}>⚙️ Settings</h3>
+                <p className={`${bodyTextClass} opacity-90`}>Text size, voice prompts & emergency contacts.</p>
               </button>
             </div>
 
             <div className="pt-6">
-              <button onClick={handleLogOut} className="w-full bg-red-700 text-white border-4 border-red-900 p-8 rounded-2xl text-3xl font-bold hover:bg-red-800">
+              <button onClick={handleLogOut} className={`w-full bg-red-700 text-white border-4 border-red-900 p-8 rounded-2xl ${subHeadingClass} hover:bg-red-800`}>
                 🚪 Securely Log Out & Exit
               </button>
             </div>
@@ -450,8 +546,8 @@ export default function FitnessPlanner() {
         {currentScreen === 'exercises' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10`}>
             <div>
-              <h2 className="text-4xl font-extrabold mb-6">Select Muscle Groups</h2>
-              <p className="text-2xl mb-6 opacity-80">Click target areas for today's session:</p>
+              <h2 className={`${headingClass} mb-6`}>Select Muscle Groups</h2>
+              <p className={`${bodyTextClass} mb-6 opacity-80`}>Click target areas for today's session:</p>
               <div className="flex flex-wrap gap-4">
                 {MUSCLE_GROUPS.map(mName => {
                   const chosen = selectedMuscles.includes(mName);
@@ -459,7 +555,7 @@ export default function FitnessPlanner() {
                     <button
                       key={mName}
                       onClick={() => setSelectedMuscles(prev => prev.includes(mName) ? prev.filter(m => m !== mName) : [...prev, mName])}
-                      className={`px-8 py-6 text-3xl font-bold border-4 rounded-2xl ${chosen ? btnClass : subCardClass}`}
+                      className={`px-8 py-6 ${subHeadingClass} border-4 rounded-2xl ${chosen ? btnClass : subCardClass}`}
                     >
                       {chosen ? `✅ ${mName}` : mName}
                     </button>
@@ -469,20 +565,20 @@ export default function FitnessPlanner() {
             </div>
 
             <div className="border-t-4 border-current pt-10 space-y-8">
-              <h2 className="text-4xl font-extrabold mb-4">Recommended Exercises:</h2>
+              <h2 className={`${headingClass} mb-4`}>Recommended Exercises:</h2>
               {EXERCISES_DB.filter(ex => selectedMuscles.length === 0 || ex.targetMuscles.some(m => selectedMuscles.includes(m))).map(ex => (
                 <div key={ex.id} className={`${subCardClass} p-8 rounded-2xl`}>
                   <div className="flex justify-between items-start">
-                    <h3 className="text-4xl font-extrabold mb-4">{ex.name}</h3>
+                    <h3 className={`${subHeadingClass} mb-4`}>{ex.name}</h3>
                     <span className="text-xl font-bold px-4 py-2 border-2 border-current rounded-lg uppercase">
                       {ex.category || 'General'}
                     </span>
                   </div>
-                  <p className="text-2xl mb-6 font-medium">{ex.description}</p>
-                  <p className="text-2xl font-bold mb-8 opacity-90">
+                  <p className={`${bodyTextClass} mb-6 font-medium`}>{ex.description}</p>
+                  <p className={`${bodyTextClass} font-bold mb-8 opacity-90`}>
                     Target Time: {ex.minutes} Minutes
                   </p>
-                  <button onClick={() => startExerciseFlow(ex)} className={`w-full ${btnClass} text-3xl font-extrabold py-8 rounded-2xl`}>
+                  <button onClick={() => startExerciseFlow(ex)} className={`w-full ${btnClass} ${subHeadingClass} py-8 rounded-2xl`}>
                     Select This Exercise
                   </button>
                 </div>
@@ -491,121 +587,70 @@ export default function FitnessPlanner() {
           </div>
         )}
 
-        {/* SCREEN: TIMER WITH IN-SESSION FLOATING SAFETY BUTTON & MOBILE EMERGENCY LINKS */}
+        {/* SCREEN: TIMER WITH IN-SESSION FLOATING SAFETY BUTTON */}
         {currentScreen === 'timer' && timerExercise && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10 relative`}>
             {/* FLOATING EMERGENCY ASSISTANCE BUTTON */}
-            <div className="sticky top-4 z-50 flex justify-end">
+            <div className="sticky top-4 z-40 flex justify-end">
               <button 
-                onClick={() => setShowInSessionEmergencyAlert(!showInSessionEmergencyAlert)} 
-                className="bg-red-600 text-white font-extrabold px-8 py-4 rounded-full text-2xl border-4 border-red-950 shadow-2xl hover:bg-red-700 transition-transform active:scale-95 animate-pulse"
+                onClick={() => setShowEmergencyModal(true)} 
+                className={`bg-red-600 text-white font-extrabold px-8 py-4 rounded-full ${bodyTextClass} border-4 border-red-950 shadow-2xl hover:bg-red-700 transition-transform active:scale-95 animate-pulse`}
               >
                 🚨 Emergency Assistance
               </button>
             </div>
 
-            {showInSessionEmergencyAlert && (
-              <div className="p-8 rounded-2xl border-8 border-red-600 bg-red-100 text-red-950 space-y-6">
-                <h3 className="text-4xl font-black">🚨 Emergency Quick Actions</h3>
-                <p className="text-2xl font-bold">If you feel dizzy, short of breath, or experienced a fall, stop immediately:</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* DIRECT 911 CALL BUTTON (Triggers Android / iOS Phone App) */}
-                  <a 
-                    href="tel:911" 
-                    className="block text-center bg-red-700 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-red-950 hover:bg-red-800"
-                  >
-                    📞 Call 911 Directly
-                  </a>
-
-                  {/* DIRECT TEXT 911 BUTTON (Triggers Android / iOS Messaging App) */}
-                  <a 
-                    href="sms:911" 
-                    className="block text-center bg-zinc-800 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-black hover:bg-zinc-900"
-                  >
-                    💬 Text 911 (SMS)
-                  </a>
-                </div>
-
-                {/* PERSONAL EMERGENCY CONTACT */}
-                {settings.emergencyContactPhone && (
-                  <a 
-                    href={`tel:${settings.emergencyContactPhone}`} 
-                    className="block w-full text-center bg-amber-600 text-white font-extrabold text-3xl py-6 rounded-2xl border-4 border-amber-900 hover:bg-amber-700"
-                  >
-                    📞 Call {settings.emergencyContactName || 'Caregiver'} ({settings.emergencyContactPhone})
-                  </a>
-                )}
-
-                {/* ONLINE EMERGENCY / HEALTHCARE PORTAL LINK */}
-                {settings.emergencyWebUrl && (
-                  <a 
-                    href={settings.emergencyWebUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="block w-full text-center bg-blue-700 text-white font-extrabold text-2xl py-5 rounded-2xl border-4 border-blue-900 hover:bg-blue-800"
-                  >
-                    🌐 Open Online Emergency Health Portal ↗
-                  </a>
-                )}
-
-                <button onClick={() => setShowInSessionEmergencyAlert(false)} className="w-full bg-slate-800 text-white font-bold text-2xl py-4 rounded-xl">
-                  Dismiss Emergency Notice
-                </button>
-              </div>
-            )}
-
-            <h2 className="text-5xl font-extrabold text-center">{timerExercise.name}</h2>
+            <h2 className={`${headingClass} text-center`}>{timerExercise.name}</h2>
 
             {/* PHASE INDICATOR */}
             <div className="flex justify-center gap-4 text-center">
-              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'warmup' ? 'bg-yellow-400 text-black border-yellow-600' : 'opacity-40 border-current'}`}>
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold ${bodyTextClass} ${timerPhase === 'warmup' ? 'bg-yellow-400 text-black border-yellow-600' : 'opacity-40 border-current'}`}>
                 1. Dynamic Warm-Up (2 min)
               </span>
-              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'active' ? 'bg-blue-600 text-white border-blue-900' : 'opacity-40 border-current'}`}>
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold ${bodyTextClass} ${timerPhase === 'active' ? 'bg-blue-600 text-white border-blue-900' : 'opacity-40 border-current'}`}>
                 2. Main Routine
               </span>
-              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold text-2xl ${timerPhase === 'cooldown' ? 'bg-green-600 text-white border-green-900' : 'opacity-40 border-current'}`}>
+              <span className={`px-6 py-3 rounded-xl border-4 font-extrabold ${bodyTextClass} ${timerPhase === 'cooldown' ? 'bg-green-600 text-white border-green-900' : 'opacity-40 border-current'}`}>
                 3. Cool Down (2 min)
               </span>
             </div>
             
             <div className={`p-8 rounded-2xl space-y-6 border-8 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'border-yellow-500 bg-yellow-50'}`}>
-              <h3 className="text-4xl font-extrabold">⚠️ Mandatory Safety Check</h3>
-              <p className="text-2xl font-bold">Confirm all safety items to unlock the timer:</p>
+              <h3 className={headingClass}>⚠️ Mandatory Safety Check</h3>
+              <p className={`${bodyTextClass} font-bold`}>Confirm all safety items to unlock the timer:</p>
               
               <div className="space-y-4 pt-4">
                 <label className={`flex items-center gap-6 p-6 rounded-xl border-4 cursor-pointer ${subCardClass}`}>
                   <input type="checkbox" className="w-12 h-12 accent-yellow-500" checked={safetyCleared.clearSpace} onChange={e => setSafetyCleared(p => ({...p, clearSpace: e.target.checked}))} />
-                  <span className="text-3xl font-bold">Floor is clear of tripping hazards.</span>
+                  <span className={`${bodyTextClass} font-bold`}>Floor is clear of tripping hazards.</span>
                 </label>
                 <label className={`flex items-center gap-6 p-6 rounded-xl border-4 cursor-pointer ${subCardClass}`}>
                   <input type="checkbox" className="w-12 h-12 accent-yellow-500" checked={safetyCleared.hasWater} onChange={e => setSafetyCleared(p => ({...p, hasWater: e.target.checked}))} />
-                  <span className="text-3xl font-bold">A glass of water is within reach.</span>
+                  <span className={`${bodyTextClass} font-bold`}>A glass of water is within reach.</span>
                 </label>
                 <label className={`flex items-center gap-6 p-6 rounded-xl border-4 cursor-pointer ${subCardClass}`}>
                   <input type="checkbox" className="w-12 h-12 accent-yellow-500" checked={safetyCleared.goodShoes} onChange={e => setSafetyCleared(p => ({...p, goodShoes: e.target.checked}))} />
-                  <span className="text-3xl font-bold">Wearing supportive, non-slip footwear.</span>
+                  <span className={`${bodyTextClass} font-bold`}>Wearing supportive, non-slip footwear.</span>
                 </label>
               </div>
             </div>
 
             {/* CDC INTENSITY & UN RPE EXERTION CONFIGURATION */}
             <div className={`p-8 rounded-2xl border-4 space-y-6 ${subCardClass}`}>
-              <h3 className="text-3xl font-extrabold">CDC Intensity & Effort Level</h3>
+              <h3 className={subHeadingClass}>CDC Intensity & Effort Level</h3>
               
               <div>
-                <label className="block text-2xl font-bold mb-3">CDC Intensity Selection:</label>
+                <label className={`block ${bodyTextClass} font-bold mb-3`}>CDC Intensity Selection:</label>
                 <div className="flex gap-4">
                   <button 
                     onClick={() => setCurrentIntensity('moderate')} 
-                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${currentIntensity === 'moderate' ? btnClass : 'bg-transparent border-current'}`}
+                    className={`flex-1 py-4 ${bodyTextClass} font-bold rounded-xl border-4 ${currentIntensity === 'moderate' ? btnClass : 'bg-transparent border-current'}`}
                   >
                     🚶 Moderate (1x CDC Credit)
                   </button>
                   <button 
                     onClick={() => setCurrentIntensity('vigorous')} 
-                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${currentIntensity === 'vigorous' ? btnClass : 'bg-transparent border-current'}`}
+                    className={`flex-1 py-4 ${bodyTextClass} font-bold rounded-xl border-4 ${currentIntensity === 'vigorous' ? btnClass : 'bg-transparent border-current'}`}
                   >
                     🏃 Vigorous (2x CDC Credit)
                   </button>
@@ -613,7 +658,7 @@ export default function FitnessPlanner() {
               </div>
 
               <div>
-                <label className="block text-2xl font-bold mb-2">UN Effort Level (RPE Scale 1 to 10): {currentRpe}</label>
+                <label className={`block ${bodyTextClass} font-bold mb-2`}>UN Effort Level (RPE Scale 1 to 10): {currentRpe}</label>
                 <input 
                   type="range" 
                   min="1" 
@@ -622,7 +667,7 @@ export default function FitnessPlanner() {
                   onChange={e => setCurrentRpe(Number(e.target.value))}
                   className="w-full h-8 bg-slate-300 rounded-lg cursor-pointer"
                 />
-                <p className="text-xl opacity-80 mt-1">1 = Very Easy, 5 = Moderate Effort, 10 = Maximum Exertion</p>
+                <p className={`${bodyTextClass} opacity-80 mt-1`}>1 = Very Easy, 5 = Moderate Effort, 10 = Maximum Exertion</p>
               </div>
             </div>
 
@@ -639,7 +684,7 @@ export default function FitnessPlanner() {
                   if (!timerActive && settings.audioPrompts) speakText(`Starting ${timerPhase} for ${timerExercise.name}`);
                   setTimerActive(!timerActive);
                 }}
-                className={`w-full py-8 text-4xl font-extrabold rounded-2xl border-8 ${
+                className={`w-full py-8 ${headingClass} rounded-2xl border-8 ${
                   timerActive 
                     ? 'bg-amber-500 text-black border-amber-700' 
                     : 'bg-green-600 text-white border-green-800'
@@ -650,12 +695,12 @@ export default function FitnessPlanner() {
             </div>
 
             <div className={`p-8 rounded-2xl border-4 ${subCardClass}`}>
-              <h3 className="text-3xl font-extrabold mb-6">Instructions:</h3>
+              <h3 className={`${subHeadingClass} mb-6`}>Instructions:</h3>
               <ul className="space-y-6">
                 {timerExercise.instructions.map((step, idx) => (
                   <li key={idx} className="flex gap-6 items-start">
-                    <span className="bg-current text-zinc-900 dark:text-black font-black rounded-full w-12 h-12 flex items-center justify-center shrink-0 text-2xl">{idx + 1}</span>
-                    <span className="text-2xl font-medium pt-1">{step}</span>
+                    <span className={`bg-current text-zinc-900 dark:text-black font-black rounded-full w-12 h-12 flex items-center justify-center shrink-0 ${bodyTextClass}`}>{idx + 1}</span>
+                    <span className={`${bodyTextClass} font-medium pt-1`}>{step}</span>
                   </li>
                 ))}
               </ul>
@@ -667,48 +712,48 @@ export default function FitnessPlanner() {
         {currentScreen === 'progress' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-12 print:border-none print:shadow-none`}>
             <div>
-              <h2 className="text-4xl font-extrabold mb-4">CDC & UN Goal Dashboard</h2>
-              <p className="text-xl opacity-80 mb-8">Aligned with CDC guidelines for Adults 65+ and UN SDG Target 3.4 for Healthy Aging.</p>
+              <h2 className={`${headingClass} mb-4`}>CDC & UN Goal Dashboard</h2>
+              <p className={`${bodyTextClass} opacity-80 mb-8`}>Aligned with CDC guidelines for Adults 65+ and UN SDG Target 3.4 for Healthy Aging.</p>
               
               <div className="space-y-8">
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
-                  <h3 className="text-3xl font-extrabold mb-2">1. Aerobic Activity (CDC Target)</h3>
-                  <p className="text-2xl mb-4">Goal: At least 150 Moderate Minutes / week (Vigorous minutes count double)</p>
-                  <p className="text-2xl mb-4 font-bold">Weighted CDC Credit Logged: {calculateCdcAerobicCredit()} / 150 minutes</p>
+                  <h3 className={`${subHeadingClass} mb-2`}>1. Aerobic Activity (CDC Target)</h3>
+                  <p className={`${bodyTextClass} mb-4`}>Goal: At least 150 Moderate Minutes / week (Vigorous minutes count double)</p>
+                  <p className={`${bodyTextClass} mb-4 font-bold`}>Weighted CDC Credit Logged: {calculateCdcAerobicCredit()} / 150 minutes</p>
                   <div className="w-full bg-zinc-300 dark:bg-zinc-700 h-10 rounded-full border-4 border-current overflow-hidden">
                     <div className="bg-blue-600 h-full transition-all" style={{ width: `${Math.min((calculateCdcAerobicCredit() / 150) * 100, 100)}%` }}></div>
                   </div>
                 </div>
 
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
-                  <h3 className="text-3xl font-extrabold mb-2">2. Muscle Strengthening (CDC Target)</h3>
-                  <p className="text-2xl mb-2">Goal: At least 2 days / week</p>
-                  <p className="text-2xl font-bold">Logged: {countDaysByCategory('strength')} unique days active</p>
+                  <h3 className={`${subHeadingClass} mb-2`}>2. Muscle Strengthening (CDC Target)</h3>
+                  <p className={`${bodyTextClass} mb-2`}>Goal: At least 2 days / week</p>
+                  <p className={`${bodyTextClass} font-bold`}>Logged: {countDaysByCategory('strength')} unique days active</p>
                 </div>
 
                 <div className={`${subCardClass} p-8 rounded-2xl`}>
-                  <h3 className="text-3xl font-extrabold mb-2">3. Balance Training (CDC & UN SDG 3)</h3>
-                  <p className="text-2xl mb-2">Goal: 3 days / week to reduce fall risks</p>
-                  <p className="text-2xl font-bold">Logged: {countDaysByCategory('balance')} unique days completed</p>
+                  <h3 className={`${subHeadingClass} mb-2`}>3. Balance Training (CDC & UN SDG 3)</h3>
+                  <p className={`${bodyTextClass} mb-2`}>Goal: 3 days / week to reduce fall risks</p>
+                  <p className={`${bodyTextClass} font-bold`}>Logged: {countDaysByCategory('balance')} unique days completed</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t-4 border-current pt-10">
               <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 print:hidden">
-                <h2 className="text-4xl font-extrabold">Logs for {selectedDate}</h2>
+                <h2 className={headingClass}>Logs for {selectedDate}</h2>
                 <div className="flex gap-4 w-full sm:w-auto">
-                  <button onClick={printDoctorSummary} className={`font-bold text-2xl px-6 py-4 rounded-xl border-4 ${subCardClass} flex-1 sm:flex-none`}>
+                  <button onClick={printDoctorSummary} className={`font-bold ${bodyTextClass} px-6 py-4 rounded-xl border-4 ${subCardClass} flex-1 sm:flex-none`}>
                     🖨️ Print Doctor Report
                   </button>
-                  <button onClick={downloadMyLogsData} className={`font-bold text-2xl px-8 py-4 rounded-xl border-4 ${btnClass} flex-1 sm:flex-none`}>
+                  <button onClick={downloadMyLogsData} className={`font-bold ${bodyTextClass} px-8 py-4 rounded-xl border-4 ${btnClass} flex-1 sm:flex-none`}>
                     📥 Download CSV
                   </button>
                 </div>
               </div>
 
               {logs.filter(l => l.date === selectedDate).length === 0 ? (
-                <p className={`${subCardClass} p-10 border-dashed rounded-2xl text-center font-bold text-2xl`}>
+                <p className={`${subCardClass} p-10 border-dashed rounded-2xl text-center font-bold ${bodyTextClass}`}>
                   No activities logged for this date.
                 </p>
               ) : (
@@ -716,15 +761,15 @@ export default function FitnessPlanner() {
                   {logs.filter(l => l.date === selectedDate).map(log => (
                     <div key={log.id} className={`${subCardClass} p-8 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6`}>
                       <div className="text-center sm:text-left">
-                        <h4 className="text-3xl font-extrabold mb-2">{log.name}</h4>
-                        <p className="text-2xl opacity-90">
+                        <h4 className={`${subHeadingClass} mb-2`}>{log.name}</h4>
+                        <p className={`${bodyTextClass} opacity-90`}>
                           Duration: {log.minutes} Minutes ({log.category})
                         </p>
-                        <p className="text-xl font-bold mt-1 text-blue-600 dark:text-yellow-400">
+                        <p className={`${bodyTextClass} font-bold mt-1 text-blue-600 dark:text-yellow-400`}>
                           Intensity: {log.intensity || 'moderate'} | Effort (RPE): {log.rpeScore || 5}/10
                         </p>
                       </div>
-                      <button onClick={() => setLogs(prev => prev.filter(item => item.id !== log.id))} className="bg-red-700 text-white border-4 border-red-900 font-extrabold text-2xl px-8 py-4 rounded-xl w-full sm:w-auto print:hidden">
+                      <button onClick={() => setLogs(prev => prev.filter(item => item.id !== log.id))} className={`bg-red-700 text-white border-4 border-red-900 font-extrabold ${bodyTextClass} px-8 py-4 rounded-xl w-full sm:w-auto print:hidden`}>
                         Delete
                       </button>
                     </div>
@@ -738,23 +783,23 @@ export default function FitnessPlanner() {
         {/* SCREEN: NOTES */}
         {currentScreen === 'notes' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10`}>
-            <h2 className="text-4xl font-extrabold">Daily Health Notes: {selectedDate}</h2>
+            <h2 className={headingClass}>Daily Health Notes: {selectedDate}</h2>
             
             <div className="space-y-6">
               <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
                 <input type="checkbox" className="w-12 h-12 accent-blue-600" checked={currentFeltGood} onChange={e => setCurrentFeltGood(e.target.checked)} />
-                <span className="text-3xl font-bold">I felt energetic and active today.</span>
+                <span className={`${subHeadingClass}`}>I felt energetic and active today.</span>
               </label>
               
               <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
                 <input type="checkbox" className="w-12 h-12 accent-blue-600" checked={currentDrankWater} onChange={e => setCurrentDrankWater(e.target.checked)} />
-                <span className="text-3xl font-bold">I maintained adequate hydration.</span>
+                <span className={`${subHeadingClass}`}>I maintained adequate hydration.</span>
               </label>
             </div>
 
             <div className={`p-8 rounded-2xl border-4 space-y-4 ${subCardClass}`}>
-              <h3 className="text-3xl font-bold">UN SDG 3 Fall Risk & Balance Assessment</h3>
-              <label className="block text-2xl font-bold">How confident did you feel in your balance today? ({currentBalanceConfidence} / 5)</label>
+              <h3 className={subHeadingClass}>UN SDG 3 Fall Risk & Balance Assessment</h3>
+              <label className={`block ${bodyTextClass} font-bold`}>How confident did you feel in your balance today? ({currentBalanceConfidence} / 5)</label>
               <input 
                 type="range" 
                 min="1" 
@@ -763,24 +808,24 @@ export default function FitnessPlanner() {
                 onChange={e => setCurrentBalanceConfidence(Number(e.target.value))}
                 className="w-full h-8 bg-slate-300 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-xl font-bold opacity-80">
+              <div className={`flex justify-between ${bodyTextClass} font-bold opacity-80`}>
                 <span>1 = Unsteady / High Risk</span>
                 <span>5 = Very Confident / Steady</span>
               </div>
             </div>
 
             <div className="space-y-6">
-              <label className="block text-3xl font-extrabold">Journal / Observations:</label>
+              <label className={`block ${subHeadingClass}`}>Journal / Observations:</label>
               <textarea
                 rows={5}
                 value={currentNoteText}
                 onChange={e => setCurrentNoteText(e.target.value)}
-                className={`w-full p-6 text-2xl rounded-2xl ${inputClass}`}
+                className={`w-full p-6 ${bodyTextClass} rounded-2xl ${inputClass}`}
                 placeholder="Log physical sensations, joint comfort, or personal wins..."
               />
             </div>
 
-            <button onClick={saveNotes} className={`w-full ${btnClass} font-extrabold text-4xl py-8 rounded-2xl shadow-lg`}>
+            <button onClick={saveNotes} className={`w-full ${btnClass} font-extrabold ${subHeadingClass} py-8 rounded-2xl shadow-lg`}>
               Save Daily Notes
             </button>
           </div>
@@ -789,16 +834,16 @@ export default function FitnessPlanner() {
         {/* SCREEN: UN SDG INFO */}
         {currentScreen === 'sdgInfo' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-8`}>
-            <h2 className="text-4xl font-extrabold">United Nations SDG 3 & CDC Standards</h2>
+            <h2 className={headingClass}>United Nations SDG 3 & CDC Standards</h2>
             <div className={`${subCardClass} p-6 rounded-xl space-y-4`}>
-              <h3 className="text-3xl font-bold">🇺🇳 UN Sustainable Development Goal 3</h3>
-              <p className="text-2xl">
+              <h3 className={subHeadingClass}>🇺🇳 UN Sustainable Development Goal 3</h3>
+              <p className={bodyTextClass}>
                 <strong>Target 3.4:</strong> By 2030, reduce non-communicable diseases and promote mental health and well-being. Physical mobility maintenance in older adults directly advances SDG 3 global health indicators.
               </p>
             </div>
             <div className={`${subCardClass} p-6 rounded-xl space-y-4`}>
-              <h3 className="text-3xl font-bold">🏥 CDC Physical Activity Guidelines</h3>
-              <ul className="list-disc pl-8 text-2xl space-y-2">
+              <h3 className={subHeadingClass}>🏥 CDC Physical Activity Guidelines</h3>
+              <ul className={`list-disc pl-8 ${bodyTextClass} space-y-2`}>
                 <li>150+ minutes per week of moderate-intensity aerobic activity (or 75 minutes of vigorous exercise).</li>
                 <li>At least 2 days per week of strength building for major muscle groups.</li>
                 <li>At least 3 days per week of multi-component balance exercises.</li>
@@ -810,78 +855,78 @@ export default function FitnessPlanner() {
         {/* SCREEN: SETTINGS */}
         {currentScreen === 'settings' && (
           <div className={`${cardClass} p-8 rounded-2xl space-y-10`}>
-            <h2 className="text-4xl font-extrabold border-b-4 border-current pb-6">Emergency & Safety Settings</h2>
+            <h2 className={`${headingClass} border-b-4 border-current pb-6`}>Emergency & App Settings</h2>
             
             {/* Automatic Emergency Contacts */}
             <div className="space-y-6">
-              <h3 className="text-3xl font-bold text-red-600 dark:text-red-400">🚨 Emergency Contact Setup</h3>
+              <h3 className={`${subHeadingClass} text-red-600 dark:text-red-400`}>🚨 Emergency Contact Setup</h3>
               
               <div className="p-6 rounded-2xl border-4 border-red-500 bg-red-50 text-red-950 font-bold space-y-2">
-                <p className="text-2xl">✅ Default System Emergency Contact: <strong>911 (US/National Dispatch)</strong></p>
-                <p className="text-xl opacity-90">Tapping "Call 911" or "Text 911" automatically opens the native Phone or SMS application on Android and mobile devices.</p>
+                <p className={bodyTextClass}>✅ Default System Emergency Contact: <strong>911 (US/National Dispatch)</strong></p>
+                <p className={`${bodyTextClass} opacity-90`}>Tapping "Call 911" or "Text 911" automatically opens the native Phone or SMS application on mobile devices.</p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-2xl font-bold mb-2">Personal Caregiver / Doctor Name:</label>
+                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Personal Caregiver / Doctor Name:</label>
                   <input 
                     type="text" 
                     value={settings.emergencyContactName}
                     onChange={e => setSettings(p => ({...p, emergencyContactName: e.target.value}))}
-                    className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
+                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
                     placeholder="e.g. Dr. Smith / Daughter Jane"
                   />
                 </div>
                 <div>
-                  <label className="block text-2xl font-bold mb-2">Personal Emergency Phone Number:</label>
+                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Personal Emergency Phone Number:</label>
                   <input 
                     type="tel" 
                     value={settings.emergencyContactPhone}
                     onChange={e => setSettings(p => ({...p, emergencyContactPhone: e.target.value}))}
-                    className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
+                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
                     placeholder="1-800-555-0199"
                   />
                 </div>
                 <div>
-                  <label className="block text-2xl font-bold mb-2">Online Emergency / Telehealth Website URL:</label>
+                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Local Emergency Medical ID / Notes (No Signup):</label>
+                  <textarea 
+                    rows={3}
+                    value={settings.medicalNotes}
+                    onChange={e => setSettings(p => ({...p, medicalNotes: e.target.value}))}
+                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                    placeholder="List blood type, allergies, or emergency medical history..."
+                  />
+                  <p className="text-lg opacity-80 mt-1">Stored locally on your device. Can be presented immediately to first responders without signing up for external websites.</p>
+                </div>
+                <div>
+                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Optional Telehealth / Medical Website URL:</label>
                   <input 
                     type="url" 
                     value={settings.emergencyWebUrl}
                     onChange={e => setSettings(p => ({...p, emergencyWebUrl: e.target.value}))}
-                    className={`w-full p-4 text-2xl rounded-xl ${inputClass}`}
-                    placeholder="https://www.emergencyprofile.org"
+                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                    placeholder="https://myportal.health.org"
                   />
-                  <p className="text-lg opacity-80 mt-1">Allows users to transmit health profiles or consult doctors online during emergencies.</p>
                 </div>
               </div>
             </div>
 
             {/* Visual & Accessibility */}
             <div className="border-t-4 border-current pt-10 space-y-6">
-              <h3 className="text-3xl font-bold">Display & Feedback Settings</h3>
+              <h3 className={subHeadingClass}>Display & Accessibility Settings</h3>
               
-              <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
-                <input 
-                  type="checkbox" 
-                  className="w-12 h-12 accent-yellow-400"
-                  checked={settings.highContrastMode}
-                  onChange={e => setSettings(p => ({...p, highContrastMode: e.target.checked}))}
-                />
-                <span className="text-3xl font-bold">Enable High-Contrast Dark Mode</span>
-              </label>
-
               <div className={`p-8 rounded-2xl border-4 space-y-4 ${subCardClass}`}>
-                <label className="block text-3xl font-bold">Font Scale:</label>
+                <label className={`block ${subHeadingClass}`}>Font Scale (App-wide Text Control):</label>
                 <div className="flex gap-4">
                   <button 
                     onClick={() => setSettings(p => ({...p, fontSize: 'normal'}))}
-                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${settings.fontSize === 'normal' ? btnClass : subCardClass}`}
+                    className={`flex-1 py-4 ${bodyTextClass} font-bold rounded-xl border-4 ${settings.fontSize === 'normal' ? btnClass : subCardClass}`}
                   >
                     Standard Size
                   </button>
                   <button 
                     onClick={() => setSettings(p => ({...p, fontSize: 'large'}))}
-                    className={`flex-1 py-4 text-2xl font-bold rounded-xl border-4 ${settings.fontSize === 'large' ? btnClass : subCardClass}`}
+                    className={`flex-1 py-4 ${bodyTextClass} font-bold rounded-xl border-4 ${settings.fontSize === 'large' ? btnClass : subCardClass}`}
                   >
                     Large Print
                   </button>
@@ -892,10 +937,20 @@ export default function FitnessPlanner() {
                 <input 
                   type="checkbox" 
                   className="w-12 h-12 accent-yellow-400"
+                  checked={settings.highContrastMode}
+                  onChange={e => setSettings(p => ({...p, highContrastMode: e.target.checked}))}
+                />
+                <span className={subHeadingClass}>Enable High-Contrast Dark Mode</span>
+              </label>
+
+              <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
+                <input 
+                  type="checkbox" 
+                  className="w-12 h-12 accent-yellow-400"
                   checked={settings.audioPrompts}
                   onChange={e => setSettings(p => ({...p, audioPrompts: e.target.checked}))}
                 />
-                <span className="text-3xl font-bold">Voice Assistance & Audio Cues</span>
+                <span className={subHeadingClass}>Voice Assistance & Audio Cues</span>
               </label>
 
               <label className={`flex items-center gap-6 p-8 rounded-2xl border-4 cursor-pointer ${subCardClass}`}>
@@ -905,11 +960,11 @@ export default function FitnessPlanner() {
                   checked={settings.hapticFeedback}
                   onChange={e => setSettings(p => ({...p, hapticFeedback: e.target.checked}))}
                 />
-                <span className="text-3xl font-bold">Haptic Device Vibrations</span>
+                <span className={subHeadingClass}>Haptic Device Vibrations</span>
               </label>
             </div>
 
-            <button onClick={() => setCurrentScreen('menu')} className={`w-full ${btnClass} font-extrabold text-4xl py-8 rounded-2xl shadow-lg mt-8`}>
+            <button onClick={() => setCurrentScreen('menu')} className={`w-full ${btnClass} font-extrabold ${headingClass} py-8 rounded-2xl shadow-lg mt-8`}>
               Save Settings & Return
             </button>
           </div>
