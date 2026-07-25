@@ -25,6 +25,8 @@ interface DayNote {
 interface UserSettings {
   emergencyContactName: string;
   emergencyContactPhone: string;
+  emergencyContact2Name: string;
+  emergencyContact2Phone: string;
   emergencyWebUrl: string; // Optional Telehealth / Medical Web link
   medicalNotes: string; // Local Medical ID (allergies, blood type, conditions)
   highContrastMode: boolean;
@@ -57,6 +59,8 @@ export default function FitnessPlanner() {
   const [settings, setSettings] = useState<UserSettings>({
     emergencyContactName: 'Personal Caregiver / Doctor',
     emergencyContactPhone: '',
+    emergencyContact2Name: 'Family Member / Alternate Contact',
+    emergencyContact2Phone: '',
     emergencyWebUrl: '',
     medicalNotes: 'No known allergies. Condition: N/A Blood Type: N/A',
     highContrastMode: false,
@@ -365,7 +369,7 @@ export default function FitnessPlanner() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
-            {/* STANDARDIZED EMERGENCY BUTTON */}
+            {/* STANDARDIZED EMERGENCY BUTTON; for elderly's safety! */}
             <button 
               onClick={() => setShowEmergencyModal(true)} 
               className="bg-red-700 text-white font-extrabold px-6 py-4 rounded-xl border-4 border-red-950 hover:bg-red-800 flex items-center gap-2 shadow-lg"
@@ -410,16 +414,37 @@ export default function FitnessPlanner() {
                 </a>
               </div>
 
-              {settings.emergencyContactPhone && (
+              {/* PERSONAL CONTACT 1 (lets seniors put in their own contacts) */}
+              {settings.emergencyContactPhone ? (
                 <a 
                   href={`tel:${settings.emergencyContactPhone}`} 
                   className={`block w-full text-center bg-amber-600 text-white font-extrabold ${subHeadingClass} py-6 rounded-2xl border-4 border-amber-900 hover:bg-amber-700`}
                 >
-                  📞 Call {settings.emergencyContactName || 'Caregiver'} ({settings.emergencyContactPhone})
+                  📞 Call Personal Contact: {settings.emergencyContactName || 'Caregiver'} ({settings.emergencyContactPhone})
+                </a>
+              ) : (
+                <div className={`p-4 rounded-xl border-4 border-amber-500 bg-amber-50 text-amber-900 text-center space-y-3`}>
+                  <p className={`${bodyTextClass} font-bold`}>No Primary Personal Contact Set Up Yet</p>
+                  <button 
+                    onClick={() => { setShowEmergencyModal(false); setCurrentScreen('settings'); }} 
+                    className="bg-amber-600 text-white font-extrabold px-6 py-3 rounded-xl hover:bg-amber-700"
+                  >
+                    ➕ Add Your Caregiver / Personal Number Now
+                  </button>
+                </div>
+              )}
+
+              {/* PERSONAL CONTACT 2 (OPTIONAL SECONDARY CONTACT) */}
+              {settings.emergencyContact2Phone && (
+                <a 
+                  href={`tel:${settings.emergencyContact2Phone}`} 
+                  className={`block w-full text-center bg-teal-700 text-white font-extrabold ${subHeadingClass} py-6 rounded-2xl border-4 border-teal-950 hover:bg-teal-800`}
+                >
+                  📞 Call 2nd Contact: {settings.emergencyContact2Name || 'Alternate'} ({settings.emergencyContact2Phone})
                 </a>
               )}
 
-              {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD BUTTON */}
+              {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD BUTTON (for emergencies not on phone)*/}
               <button 
                 onClick={() => { setShowEmergencyModal(false); setShowMedicalCardModal(true); }}
                 className={`block w-full text-center bg-blue-700 text-white font-extrabold ${subHeadingClass} py-5 rounded-2xl border-4 border-blue-900 hover:bg-blue-800`}
@@ -434,7 +459,7 @@ export default function FitnessPlanner() {
                   rel="noopener noreferrer"
                   className={`block w-full text-center bg-slate-700 text-white font-bold ${bodyTextClass} py-4 rounded-2xl border-4 border-slate-900 hover:bg-slate-800`}
                 >
-                  🌐 External Healthcare Web Portal ↗
+                  🌐 External Healthcare Web Portal (Requires Signup) ↗
                 </a>
               )}
 
@@ -456,7 +481,10 @@ export default function FitnessPlanner() {
 
               <div className={`${subCardClass} p-6 rounded-xl space-y-4`}>
                 <p className={bodyTextClass}><strong>User Profile:</strong> {isGuestMode ? 'Guest User' : userEmail}</p>
-                <p className={bodyTextClass}><strong>Emergency Contact:</strong> {settings.emergencyContactName || 'None listed'} {settings.emergencyContactPhone ? `(${settings.emergencyContactPhone})` : ''}</p>
+                <p className={bodyTextClass}><strong>Primary Contact:</strong> {settings.emergencyContactName || 'None listed'} {settings.emergencyContactPhone ? `(${settings.emergencyContactPhone})` : ''}</p>
+                {settings.emergencyContact2Phone && (
+                  <p className={bodyTextClass}><strong>Secondary Contact:</strong> {settings.emergencyContact2Name || 'None listed'} ({settings.emergencyContact2Phone})</p>
+                )}
                 <div className="border-t-2 border-current pt-4">
                   <p className={`${subHeadingClass} mb-2`}>Medical Notes & Conditions:</p>
                   <p className={bodyTextClass}>{settings.medicalNotes || 'No local medical notes saved.'}</p>
@@ -469,7 +497,7 @@ export default function FitnessPlanner() {
 
               <div className="flex gap-4">
                 <button onClick={() => { setShowMedicalCardModal(false); setCurrentScreen('settings'); }} className={`flex-1 bg-amber-600 text-white font-bold ${bodyTextClass} py-4 rounded-xl`}>
-                  ✏️ Edit Profile Info
+                  ✏️ Edit Profile & Contacts
                 </button>
                 <button onClick={() => setShowMedicalCardModal(false)} className={`flex-1 bg-slate-800 text-white font-bold ${bodyTextClass} py-4 rounded-xl`}>
                   Close Profile
@@ -520,7 +548,7 @@ export default function FitnessPlanner() {
               
               <button onClick={() => setCurrentScreen('progress')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-green-50 border-green-600 hover:bg-green-100'}`}>
                 <h3 className={`${subHeadingClass} mb-2`}>📊 My Progress</h3>
-                <p className={`${bodyTextClass} opacity-90`}>Track CDC targets & UN SDG 3 status.</p>
+                <p className={`${bodyTextClass} opacity-90`}>Track CDC targets & UN SDG 3/10 status.</p>
               </button>
 
               <button onClick={() => setCurrentScreen('notes')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-yellow-50 border-yellow-600 hover:bg-yellow-100'}`}>
@@ -866,27 +894,55 @@ export default function FitnessPlanner() {
                 <p className={`${bodyTextClass} opacity-90`}>Tapping "Call 911" or "Text 911" automatically opens the native Phone or SMS application on mobile devices.</p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Personal Caregiver / Doctor Name:</label>
-                  <input 
-                    type="text" 
-                    value={settings.emergencyContactName}
-                    onChange={e => setSettings(p => ({...p, emergencyContactName: e.target.value}))}
-                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
-                    placeholder="e.g. Dr. Smith / Daughter Jane"
-                  />
+              <div className="space-y-6">
+                <div className="p-6 rounded-xl border-4 border-amber-500 space-y-4">
+                  <h4 className={`${subHeadingClass}`}>Primary Personal Contact</h4>
+                  <div>
+                    <label className={`block ${bodyTextClass} font-bold mb-2`}>Caregiver / Doctor Name:</label>
+                    <input 
+                      type="text" 
+                      value={settings.emergencyContactName}
+                      onChange={e => setSettings(p => ({...p, emergencyContactName: e.target.value}))}
+                      className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                      placeholder="e.g. Dr. Smith / Daughter Jane"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block ${bodyTextClass} font-bold mb-2`}>Phone Number:</label>
+                    <input 
+                      type="tel" 
+                      value={settings.emergencyContactPhone}
+                      onChange={e => setSettings(p => ({...p, emergencyContactPhone: e.target.value}))}
+                      className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                      placeholder="1-800-555-0199"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className={`block ${bodyTextClass} font-bold mb-2`}>Personal Emergency Phone Number:</label>
-                  <input 
-                    type="tel" 
-                    value={settings.emergencyContactPhone}
-                    onChange={e => setSettings(p => ({...p, emergencyContactPhone: e.target.value}))}
-                    className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
-                    placeholder="1-800-555-0199"
-                  />
+
+                <div className="p-6 rounded-xl border-4 border-teal-500 space-y-4">
+                  <h4 className={`${subHeadingClass}`}>Secondary Personal Contact (Optional)</h4>
+                  <div>
+                    <label className={`block ${bodyTextClass} font-bold mb-2`}>Family Member / Alternate Contact Name:</label>
+                    <input 
+                      type="text" 
+                      value={settings.emergencyContact2Name}
+                      onChange={e => setSettings(p => ({...p, emergencyContact2Name: e.target.value}))}
+                      className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                      placeholder="e.g. Son Mark"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block ${bodyTextClass} font-bold mb-2`}>Phone Number:</label>
+                    <input 
+                      type="tel" 
+                      value={settings.emergencyContact2Phone}
+                      onChange={e => setSettings(p => ({...p, emergencyContact2Phone: e.target.value}))}
+                      className={`w-full p-4 ${bodyTextClass} rounded-xl ${inputClass}`}
+                      placeholder="1-800-555-0200"
+                    />
+                  </div>
                 </div>
+
                 <div>
                   <label className={`block ${bodyTextClass} font-bold mb-2`}>Local Emergency Medical ID / Notes (No Signup):</label>
                   <textarea 
