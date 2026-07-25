@@ -64,7 +64,7 @@ export default function FitnessPlanner() {
     emergencyWebUrl: '',
     medicalNotes: 'No known allergies. Condition: N/A Blood Type: N/A',
     highContrastMode: false,
-    fontSize: 'large',
+    fontSize: 'normal',
     audioPrompts: true,
     restTimerSeconds: 60,
     hapticFeedback: true
@@ -320,8 +320,8 @@ export default function FitnessPlanner() {
   // --- VIEW: LOGIN ---
   if (!isLoggedIn && !isGuestMode) {
     return (
-      <div className={`min-h-screen ${bgClass} flex items-center justify-center p-6 font-sans`}>
-        <div className="max-w-2xl w-full space-y-8">
+      <div className={`min-h-screen ${bgClass} flex flex-col items-center justify-between p-6 font-sans`}>
+        <div className="max-w-2xl w-full space-y-8 my-auto">
           <h1 className={`${headingClass} text-center border-b-8 border-current pb-6`}>
             Senior Health Station
           </h1>
@@ -351,14 +351,26 @@ export default function FitnessPlanner() {
             </button>
           </div>
         </div>
+
+        {/* FOOTER APK DOWNLOAD LINK */}
+        <footer className="pt-8 pb-2 text-center opacity-75 print:hidden">
+          <a 
+            href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30169665514/artifacts/8622580509" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm md:text-base underline hover:opacity-100 transition-opacity"
+          >
+            Install Android Application of Senior Fitness App
+          </a>
+        </footer>
       </div>
     );
   }
 
   // --- VIEW: MAIN SHELL ---
   return (
-    <div className={`min-h-screen p-4 md:p-8 font-sans ${fontSizeClass} ${bgClass}`}>
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className={`min-h-screen p-4 md:p-8 font-sans ${fontSizeClass} ${bgClass} flex flex-col justify-between`}>
+      <div className="max-w-4xl mx-auto w-full space-y-8">
         
         {/* Header with Standardized Emergency Button across ALL screens */}
         <header className={`${cardClass} p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6 shadow-sm print:hidden`}>
@@ -369,7 +381,7 @@ export default function FitnessPlanner() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
-            {/* STANDARDIZED EMERGENCY BUTTON; for elderly's safety! */}
+            {/* STANDARDIZED EMERGENCY BUTTON */}
             <button 
               onClick={() => setShowEmergencyModal(true)} 
               className="bg-red-700 text-white font-extrabold px-6 py-4 rounded-xl border-4 border-red-950 hover:bg-red-800 flex items-center gap-2 shadow-lg"
@@ -385,7 +397,7 @@ export default function FitnessPlanner() {
           </div>
         </header>
 
-        {/* REUSABLE EMERGENCY MODAL (Home & Exercise pages) */}
+        {/* REUSABLE EMERGENCY MODAL */}
         {showEmergencyModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div className={`max-w-2xl w-full p-8 rounded-2xl border-8 border-red-600 ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-slate-900'} space-y-6 max-h-[90vh] overflow-y-auto`}>
@@ -414,7 +426,7 @@ export default function FitnessPlanner() {
                 </a>
               </div>
 
-              {/* PERSONAL CONTACT 1 (lets seniors put in their own contacts) */}
+              {/* PERSONAL CONTACT 1 */}
               {settings.emergencyContactPhone ? (
                 <a 
                   href={`tel:${settings.emergencyContactPhone}`} 
@@ -434,7 +446,7 @@ export default function FitnessPlanner() {
                 </div>
               )}
 
-              {/* PERSONAL CONTACT 2 (OPTIONAL SECONDARY CONTACT) */}
+              {/* PERSONAL CONTACT 2 */}
               {settings.emergencyContact2Phone && (
                 <a 
                   href={`tel:${settings.emergencyContact2Phone}`} 
@@ -444,7 +456,7 @@ export default function FitnessPlanner() {
                 </a>
               )}
 
-              {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD BUTTON (for emergencies not on phone)*/}
+              {/* EMERGENCY MEDICAL ID CARD BUTTON */}
               <button 
                 onClick={() => { setShowEmergencyModal(false); setShowMedicalCardModal(true); }}
                 className={`block w-full text-center bg-blue-700 text-white font-extrabold ${subHeadingClass} py-5 rounded-2xl border-4 border-blue-900 hover:bg-blue-800`}
@@ -459,7 +471,7 @@ export default function FitnessPlanner() {
                   rel="noopener noreferrer"
                   className={`block w-full text-center bg-slate-700 text-white font-bold ${bodyTextClass} py-4 rounded-2xl border-4 border-slate-900 hover:bg-slate-800`}
                 >
-                  🌐 External Healthcare Web Portal (Requires Signup) ↗
+                  🌐 External Healthcare Web Portal ↗
                 </a>
               )}
 
@@ -470,7 +482,7 @@ export default function FitnessPlanner() {
           </div>
         )}
 
-        {/* NO-SIGNUP EMERGENCY MEDICAL ID CARD MODAL */}
+        {/* EMERGENCY MEDICAL ID CARD MODAL */}
         {showMedicalCardModal && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div className={`max-w-2xl w-full p-8 rounded-2xl border-8 border-blue-600 ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-slate-900'} space-y-6 max-h-[90vh] overflow-y-auto`}>
@@ -548,7 +560,7 @@ export default function FitnessPlanner() {
               
               <button onClick={() => setCurrentScreen('progress')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-green-50 border-green-600 hover:bg-green-100'}`}>
                 <h3 className={`${subHeadingClass} mb-2`}>📊 My Progress</h3>
-                <p className={`${bodyTextClass} opacity-90`}>Track CDC targets & UN SDG 3/10 status.</p>
+                <p className={`${bodyTextClass} opacity-90`}>Track CDC targets & UN SDG 3 status.</p>
               </button>
 
               <button onClick={() => setCurrentScreen('notes')} className={`p-10 rounded-2xl text-left border-4 ${isDark ? 'border-yellow-400 bg-zinc-900' : 'bg-yellow-50 border-yellow-600 hover:bg-yellow-100'}`}>
@@ -1027,6 +1039,18 @@ export default function FitnessPlanner() {
         )}
 
       </div>
+
+      {/* FOOTER APK DOWNLOAD LINK (MAIN APPLICATION SHELL) */}
+      <footer className="pt-8 pb-2 text-center opacity-75 print:hidden">
+        <a 
+          href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30169665514/artifacts/8622580509" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm md:text-base underline hover:opacity-100 transition-opacity"
+        >
+          Install Android Application of Senior Fitness App
+        </a>
+      </footer>
     </div>
   );
 }
