@@ -362,7 +362,7 @@ export default function FitnessPlanner() {
         {/* FOOTER APK DOWNLOAD LINK */}
         <footer className="pt-6 pb-2 text-center opacity-75 print:hidden">
           <a 
-            href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30170630494/artifacts/8622834962" 
+            href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30175344583/artifacts/8624065865" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-xs sm:text-sm md:text-base underline hover:opacity-100 transition-opacity"
@@ -1050,7 +1050,7 @@ export default function FitnessPlanner() {
       {/* FOOTER APK DOWNLOAD LINK (MAIN APPLICATION SHELL) */}
       <footer className="pt-6 pb-2 text-center opacity-75 print:hidden">
         <a 
-          href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30170630494/artifacts/8622834962" 
+          href="https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/runs/30175344583/artifacts/8624065865" 
           target="_blank" 
           rel="noopener noreferrer"
           className="text-xs sm:text-sm md:text-base underline hover:opacity-100 transition-opacity"
