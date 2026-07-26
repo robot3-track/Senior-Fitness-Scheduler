@@ -26,7 +26,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 10,
     category: 'aerobic',
     targetMuscles: ['Legs', 'Core'],
-    imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://brightspotcdn.byu.edu/dims4/default/13765ea/2147483647/strip/true/crop/250x193+0+0/resize/250x193!/quality/90/?url=https%3A%2F%2Fbrigham-young-brightspot-us-east-2.s3.us-east-2.amazonaws.com%2F46%2F45%2Fb422e935463a805a81c380ceeb60%2Fseated-marching.jpg',
     instructions: [
       'Sit tall in a solid chair that won\'t slide, keeping your feet flat on the ground.',
       'Grip the sides of your seat if you want extra balance.',
@@ -42,7 +42,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 5,
     category: 'strength',
     targetMuscles: ['Arms', 'Chest', 'Shoulders'],
-    imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUyD4yLaqe7oIJEfxIhEYtX90IVHrjSYMynkN08qyN8jAzOU-eZVXoQiSa&s=10',
     instructions: [
       'Face a clear wall and stand a little bit further than an arm\'s length away.',
       'Put your hands flat against the wall right around shoulder height.',
@@ -58,7 +58,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 8,
     category: 'strength',
     targetMuscles: ['Legs', 'Core'],
-    imageUrl: 'https://images.unsplash.com/photo-1566241142559-40e1dab266c6?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://i0.wp.com/scoutingmagazine.org/wp-content/uploads/2019/02/Health4.jpg?fit=1361%2C952&ssl=1',
     instructions: [
       'Sit near the front edge of a sturdy chair with your feet shoulder-width apart.',
       'Lean your upper body slightly forward over your knees.',
@@ -74,7 +74,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 5,
     category: 'strength',
     targetMuscles: ['Legs'],
-    imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://gymgeek.com/wp-content/uploads/2023/10/calf-raises.png',
     instructions: [
       'Stand behind a sturdy chair or kitchen counter and lightly rest your fingers on top for balance.',
       'Keep your back straight and push up onto the balls of your feet, lifting your heels off the floor.',
@@ -90,7 +90,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 5,
     category: 'balance',
     targetMuscles: ['Legs', 'Core'],
-    imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://workoutlabs.com/wp-content/uploads/watermarked/heel-to-toe-walking-S-F.png',
     instructions: [
       'Stand right next to a counter or chair back so you have something to grab if you wobble.',
       'Place one foot directly in front of the other, with the heel of your front foot touching the toes of your back foot.',
@@ -106,7 +106,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 5,
     category: 'balance',
     targetMuscles: ['Legs', 'Core'],
-    imageUrl: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://workoutlabs.com/wp-content/uploads/watermarked/single-leg-balance-S-F.png',
     instructions: [
       'Stand next to a solid chair or wall with one hand resting gently on it.',
       'Shift your weight onto your inside leg and lift your outside foot just a few inches off the floor.',
@@ -122,7 +122,7 @@ export const EXERCISES_DB: Exercise[] = [
     minutes: 5,
     category: 'flexibility',
     targetMuscles: ['Core', 'Back'],
-    imageUrl: 'https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://cdn.shopify.com/s/files/1/0055/5515/9126/files/p9.jpg?v=1740123178',
     instructions: [
       'Sit up tall in your chair with your feet flat on the floor.',
       'Rest your hands on your thighs or fold your arms comfortably across your chest.',

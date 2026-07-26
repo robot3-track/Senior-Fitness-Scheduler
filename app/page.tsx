@@ -614,7 +614,18 @@ export default function FitnessPlanner() {
             <div className="border-t-2 sm:border-t-4 border-current pt-6 sm:pt-10 space-y-6 sm:space-y-8">
               <h2 className={`${headingClass} mb-2 sm:mb-4`}>Recommended Exercises:</h2>
               {EXERCISES_DB.filter(ex => selectedMuscles.length === 0 || ex.targetMuscles.some(m => selectedMuscles.includes(m))).map(ex => (
-                <div key={ex.id} className={`${subCardClass} p-4 sm:p-8 rounded-2xl`}>
+                <div key={ex.id} className={`${subCardClass} p-4 sm:p-8 rounded-2xl space-y-4 sm:space-y-6`}>
+                  {/* EXERCISE IMAGE */}
+                  {ex.imageUrl && (
+                    <div className="w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-xl border-2 sm:border-4 border-current">
+                      <img 
+                        src={ex.imageUrl} 
+                        alt={ex.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-start">
                     <h3 className={`${subHeadingClass} mb-2 sm:mb-4`}>{ex.name}</h3>
                     <span className="text-xs sm:text-xl font-bold px-2 sm:px-4 py-1 sm:py-2 border sm:border-2 border-current rounded-lg uppercase">
@@ -648,6 +659,17 @@ export default function FitnessPlanner() {
             </div>
 
             <h2 className={`${headingClass} text-center`}>{timerExercise.name}</h2>
+
+            {/* ACTIVE EXERCISE IMAGE DISPLAY */}
+            {timerExercise.imageUrl && (
+              <div className="w-full h-52 sm:h-72 md:h-96 overflow-hidden rounded-2xl border-4 sm:border-8 border-current shadow-lg">
+                <img 
+                  src={timerExercise.imageUrl} 
+                  alt={timerExercise.name} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
             {/* PHASE INDICATOR */}
             <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 text-center">
