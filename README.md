@@ -2,15 +2,15 @@
 
 [![Build Android APK Artifact](https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/workflows/android-build.yml/badge.svg)](https://github.com/robot3-track/Senior-Fitness-Scheduler/actions/workflows/android-build.yml)
 
-A web-based (but can be built as mobile app too!) physical activity scheduler and tracker designed for older adults. This application is aligned with the Centers for Disease Control and Prevention (CDC) physical activity guidelines for older adults, tracking aerobic exercise minutes, muscle-strengthening sessions, and balance-training days. This app also follows and supports two of the UN Sustainbility Goals.
+A web-based (but can be built as mobile app too!) physical activity scheduler and tracker designed for older adults. This app matches the Centers for Disease Control and Prevention (CDC) physical activity guidelines for older adults, tracking aerobic exercise minutes, muscle-strengthening sessions, and balance-training days. This app also follows and supports two of the UN Sustainbility Goals.
 
 ## Accessibility Features
 
 The user interface incorporates specific design choices to accommodate seniors and those with accessibility needs:
 
-*   **High-Contrast Color Palette**: Uses a light amber background with deep blue and dark gray text elements to optimize readability.
-*   **Large Touch Targets**: Actionable buttons and inputs are sized to meet or exceed touch target guidelines for older adults.
-*   **Text Size Scaling**: Users can toggle between normal and larger text sizes to scale the interface fonts dynamically.
+*   **High-Contrast Color Palette**: Uses a light background with deep blue and dark gray text elements to make readability easier.
+*   **Large Touch Targets**: Actionable buttons and inputs are sized to meet or exceed touch target guidelines for older adults, to help with decaying eyesight.
+*   **Text Size Scaling**: Users can toggle between normal and larger text sizes-  to scale the interface fonts dynamically and match custom styling.
 *   **Audio Guide**: Built-in Text-to-Speech functionality reads instructions and safety guidelines aloud.
 
 ## Core Features
@@ -20,7 +20,7 @@ The user interface incorporates specific design choices to accommodate seniors a
     *   Tracks muscle-strengthening activities (at least 2 days a week).
     *   Tracks balance-training activities (at least 3 days a week).
 *   **Weekly Calendar**:
-    *   A pre-populated default weekly schedule based on typical CDC recommendations.
+    *   A pre-made default weekly schedule based on typical CDC recommendations.
     *   An interface to complete, modify, or add custom activities for each day of the week.
 *   **Active Countdown Timer**:
     *   A large high-contrast visual timer.
@@ -31,9 +31,9 @@ The user interface incorporates specific design choices to accommodate seniors a
 
 ## UN Sustainable Goals Alignments
 
-*  **UN Goal #3**: Ensure healthy lives and promote well-being for all at all ages. The UN explicitly emphasizes that "at all ages" includes our rapidly growing global aging population, which shows the purpose of the app is for promoting healthy lives for the aging population. With CDC guidelines (150 minutes of aerobic activity, plus strength and balance training), the app directly combats age-related non-communicable conditions like cardiovascular disease, type 2 diabetes, and osteoporosis. This aligns with Target 3.4.
+*  **UN Goal #3**: Ensure healthy lives and promote well-being for all at all ages. It is obvious that the UN emphasizes that "at all ages" includes our rapidly growing global aging population, which shows the purpose of the app is for promoting healthy lives for the aging population. With CDC guidelines (150 minutes of aerobic activity, plus strength and balance training), the app directly combats age-related non-communicable conditions like cardiovascular disease, type 2 diabetes, and osteoporosis. This aligns with Target 3.4!
 
-*  **UN Goal #10**: Reduce inequality within and among countries. This app promotes social and digital inclusion regardless of age or disability. A common problem seen is that older adults are frequently left behind by the modern "digital health" revolution because apps are often built with tiny fonts, low contrast, complex navigation, and assumptions about high digital literacy. However, since this app has BIG Text Toggle, high-contrast borders, tremor-safe step-trackers, and slow-cadence Text-to-Speech, this app ensures that health-tech is accessible to individuals with visual impairments, motor-control friction, or cognitive decline. This aligns with Target 10.2.
+*  **UN Goal #10**: Reduce inequality within and among countries. This app promotes social and digital inclusion regardless of age or disability. A common problem seen is that older adults are frequently left behind by the modern "digital health" revolution because apps are often built with tiny fonts, low contrast, complex navigation, and assumptions about high digital literacy. This sadly discourages many elderly from using technology for their own good, which could creates hazards and disconnect them from the current age of electronics. However, since this app has BIG Text Toggle, high-contrast borders, tremor-safe step-trackers, and slow-cadence Text-to-Speech, this app ensures that health-tech is accessible to individuals with visual impairments, motor-control friction, or cognitive decline. This aligns with Target 10.2!
 
 ## Tech Stack
 
@@ -64,4 +64,4 @@ This app also can be built as a mobile application.
 
 # Try it now!
 
-Try out the official deployed project here at: https://senior-fitness-scheduler.vercel.app/ !
+Try out the official deployed project here at: https://senior-fitness-scheduler.vercel.app/ ! Hope you enjoy using the application!
